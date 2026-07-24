@@ -36,6 +36,7 @@ gem 'bootsnap', require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 gem 'active_model_serializers'
 gem 'jwt'
+gem 'rack-attack'
 gem 'rack-cors'
 
 group :development, :test do
@@ -51,6 +52,7 @@ end
 group :development do
   # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
   # gem "spring"
+  gem 'bullet'
 
   # Linting and code quality
   gem 'rubocop', '~> 1.60', require: false
