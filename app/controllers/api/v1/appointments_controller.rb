@@ -23,14 +23,15 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   end
 
   def update
-    @appointment.assign_attributes(appointment_attributes)
-    assign_update_associations
-
-    if @appointment.save
-      render json: AppointmentSerializer.new(@appointment).as_json
-    else
-      render_validation_errors(appointment)
+    Appointment.transaction do
+      @appointment.assign_attributes(appointment_attributes)
+      assign_update_associations
+      @appointment.save!
     end
+
+    render json: AppointmentSerializer.new(@appointment).as_json
+  rescue ActiveRecord::RecordInvalid
+    render_validation_errors(@appointment)
   end
 
   def destroy
