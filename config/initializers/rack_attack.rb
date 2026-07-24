@@ -59,9 +59,7 @@ class Rack::Attack
   end
 end
 
-disabled_environments = `['development', 'test']`
-
-Rack::Attack.enabled = !disabled_environments.include?(Rails.env)
+Rack::Attack.enabled = !Rails.env.in?(['development', 'test'])
 
 unless Rack::Attack.enabled
   Rails.logger.info(
