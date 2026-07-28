@@ -19,6 +19,7 @@ Layout/LineLength:
   Max: 120
   Exclude:
     - 'db/migrate/**/*'
+    - 'db/schema.rb'
 
 Layout/IndentationWidth:
   Width: 2
@@ -93,6 +94,7 @@ Metrics/BlockLength:
     - 'spec/**/*'
     - 'db/migrate/**/*'
     - 'db/schema.rb'
+    - "config/environments/*.rb"
 
 Metrics/AbcSize:
   Max: 20

@@ -4,6 +4,7 @@ class Api::V1::ClientsController < Api::V1::BaseController
 
   def index
     clients = current_account.clients.limit(100)
+
     render json: clients.map { |client| ClientSerializer.new(client).as_json }
   end
 
@@ -31,16 +32,14 @@ class Api::V1::ClientsController < Api::V1::BaseController
   end
 
   def destroy
-    @client.destroy
+    @client.destroy!
     head :no_content
   end
 
   private
 
   def set_client
-    @client = current_account.clients
-                             .includes(:notes, appointments: [:services, :resource, :user])
-                             .find(params[:id])
+    @client = current_account.clients.find(params[:id])
   end
 
   def client_params

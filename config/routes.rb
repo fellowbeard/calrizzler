@@ -1,9 +1,10 @@
 Rails.application.routes.draw do
-  # API namespaced routes for frontend
   namespace :api do
     namespace :v1 do
       post "login", to: "auth#login"
       get "me", to: "users#me"
+
+      resource :dashboard, only: :show
 
       resources :clients, only: [:index, :show, :create, :update, :destroy]
 
@@ -14,12 +15,7 @@ Rails.application.routes.draw do
       resources :services, only: [:index, :show, :create, :update, :destroy]
       resources :appointments, only: [:index, :show, :create, :update, :destroy]
       resources :notes, only: [:index, :show, :create, :update, :destroy]
-
-      get "dashboard", to: "users#dashboard"
-
-      resources :users, only: [:index, :show, :create, :update, :destroy] do
-        get "dashboard", on: :member
-      end
+      resources :users, only: [:index, :show, :create, :update, :destroy]
     end
   end
 end
