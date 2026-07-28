@@ -32,7 +32,9 @@ class Api::V1::UsersController < Api::V1::BaseController
   end
 
   def update_role
-    if @user.update(role_params)
+    @user.role = requested_role
+
+    if @user.save
       render json: user_json(@user)
     else
       render_validation_errors(@user)
@@ -81,13 +83,11 @@ class Api::V1::UsersController < Api::V1::BaseController
     )
   end
 
-  def role_params
-    params.require(:user).permit(:role)
-  end
-
   def requested_role
-    role = params.dig(:user, :role)
+    role = params.require(:user).require(:role)
 
-    User.roles.key?(role) ? role : 'staff'
+    return role if User.roles.key?(role)
+
+    raise ActionController::BadRequest, 'Invalid user role.'
   end
 end
