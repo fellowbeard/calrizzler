@@ -1,6 +1,7 @@
 class Api::V1::ClientsController < Api::V1::BaseController
   before_action :require_write_access, only: [:create, :update, :destroy]
   before_action :set_client, only: [:show, :update, :destroy]
+  before_action :require_owner_or_client_owner, only: [:update, :destroy]
 
   def index
     clients = current_account.clients.limit(100)
@@ -40,6 +41,17 @@ class Api::V1::ClientsController < Api::V1::BaseController
 
   def set_client
     @client = current_account.clients.find(params[:id])
+  end
+
+  def require_owner_or_client_owner
+    return if current_user.owner?
+    return if @client.user_id == current_user.id
+
+    render_error(
+      code: 'forbidden',
+      message: 'You can only change your own clients.',
+      status: :forbidden
+    )
   end
 
   def client_params
