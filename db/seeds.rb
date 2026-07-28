@@ -73,7 +73,7 @@ client_one = Client.create!(
   first_name: 'Maya',
   last_name: 'Rivera',
   email: 'maya.rivera@example.com',
-  phone: Faker::PhoneNumber.phone_number
+  phone: '(504) 555-0101'
 )
 
 client_two = Client.create!(
@@ -82,7 +82,7 @@ client_two = Client.create!(
   first_name: 'Caleb',
   last_name: 'Brooks',
   email: 'caleb.brooks@example.com',
-  phone: Faker::PhoneNumber.phone_number
+  phone: '(504) 555-0102'
 )
 
 client_three = Client.create!(
@@ -91,7 +91,7 @@ client_three = Client.create!(
   first_name: 'Nina',
   last_name: 'Patel',
   email: 'nina.patel@example.com',
-  phone: Faker::PhoneNumber.phone_number
+  phone: '(504) 555-0103'
 )
 
 # Services
@@ -123,41 +123,35 @@ follow_up = Service.create!(
 )
 
 # Appointments
-appointment_one = Appointment.new(
+Appointment.create!(
   account: account_one,
   user: jane,
   resource: chair_one,
   client: client_one,
   scheduled_at: 2.days.from_now,
-  status: 'scheduled'
+  status: 'scheduled',
+  service_ids: [deep_tissue.id, custom_rug.id]
 )
 
-appointment_one.services = [deep_tissue, custom_rug]
-appointment_one.save!
-
-appointment_two = Appointment.new(
+Appointment.create!(
   account: account_one,
   user: jane,
   resource: chair_two,
   client: client_two,
   scheduled_at: 4.days.from_now,
-  status: 'scheduled'
+  status: 'scheduled',
+  service_ids: [custom_rug.id]
 )
 
-appointment_two.services = [custom_rug]
-appointment_two.save!
-
-appointment_three = Appointment.new(
+Appointment.create!(
   account: account_two,
   user: john,
   resource: john_chair,
   client: client_three,
   scheduled_at: 1.week.from_now,
-  status: 'scheduled'
+  status: 'scheduled',
+  service_ids: [follow_up.id]
 )
-
-appointment_three.services = [follow_up]
-appointment_three.save!
 
 # Notes
 Note.create!(

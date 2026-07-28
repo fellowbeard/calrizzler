@@ -7,6 +7,10 @@ class Client < ApplicationRecord
   has_many :services, through: :appointment_services
   has_many :notes, dependent: :destroy
 
+  validates :first_name, presence: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validates :phone, format: { with: /\A[\d\s\-+()]+\z/ }, allow_blank: true
+
   scope :for_user, lambda { |user|
     where(user_id: user.id)
   }

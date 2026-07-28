@@ -87,7 +87,6 @@ class Appointment < ApplicationRecord
 
   def possible_overlapping_appointments
     account.appointments
-           .includes(:services)
            .where(resource_id: resource_id)
            .where.not(id: id)
            .where.not(status: 'canceled')
