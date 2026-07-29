@@ -28,11 +28,11 @@
 # Ignore master key for decrypting credentials and more.
 /config/master.key
 
-servicebook-frontend/node_modules/
-servicebook-frontend/dist/
-servicebook-frontend/.vite/
+calrizzler-frontend/node_modules/
+calrizzler-frontend/dist/
+calrizzler-frontend/.vite/
 # Ignore Vite dependencies and cache
-servicebook-frontend/.vite/deps/
+calrizzler-frontend/.vite/deps/
 
 # Ignore key files for decrypting credentials and more.
 /config/*.key
