@@ -19,7 +19,7 @@ require "action_cable/engine"
 Bundler.require(*Rails.groups)
 
 # rubocop:disable Style/ClassAndModuleChildren
-module Servicebook
+module Calderizzler
   # rubocop:enable Style/ClassAndModuleChildren
 
   class Application < Rails::Application

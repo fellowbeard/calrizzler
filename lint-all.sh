@@ -11,7 +11,7 @@ echo ""
 
 # Frontend linting
 echo "┌─ Frontend Linting (ESLint) ─────────┐"
-cd servicebook-frontend
+cd calrizzler-frontend
 if npm run lint; then
     echo "✓ Frontend: No issues found"
 else
