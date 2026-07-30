@@ -8,10 +8,14 @@ class Appointment < ApplicationRecord
   has_many :services, through: :appointment_services
 
   STATUS_OPTIONS = ['scheduled', 'completed', 'canceled'].freeze
-  UNKNOWN_DURATION_MINUTES = 60
 
   validates :scheduled_at, presence: true
   validates :status, presence: true, inclusion: { in: STATUS_OPTIONS }
+  validates :duration_minutes,
+            numericality: {
+              only_integer: true,
+              greater_than_or_equal_to: 0
+            }
 
   validate :must_have_at_least_one_service
   validate :scheduled_at_cannot_be_in_the_past
@@ -26,14 +30,11 @@ class Appointment < ApplicationRecord
   end
 
   def blocking_reservation_time
-    return self[:duration_minutes] if self[:duration_minutes].present?
-    return service_duration_minutes if service_duration_minutes.positive?
-
-    UNKNOWN_DURATION_MINUTES
+    duration_minutes
   end
 
   def ends_at
-    scheduled_at + blocking_reservation_time.minutes
+    scheduled_at + duration_minutes.minutes
   end
 
   def scheduled?
@@ -49,7 +50,7 @@ class Appointment < ApplicationRecord
   end
 
   def uses_default_duration?
-    self[:duration_minutes].blank? && service_duration_minutes.zero?
+    false
   end
 
   private
