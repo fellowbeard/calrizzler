@@ -31,3 +31,10 @@
 
 en:
   hello: "Hello world"
+
+  activerecord:
+    attributes:
+      appointment:
+        scheduled_at: "Appointment"
+        duration_minutes: "Appointment duration"
+        services: "Service"

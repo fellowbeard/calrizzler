@@ -14,7 +14,8 @@ class Appointment < ApplicationRecord
   validates :duration_minutes,
             numericality: {
               only_integer: true,
-              greater_than_or_equal_to: 0
+              greater_than_or_equal_to: 0,
+              message: 'must have a number of minutes (or "0")',
             }
 
   validate :must_have_at_least_one_service
@@ -34,6 +35,8 @@ class Appointment < ApplicationRecord
   end
 
   def ends_at
+    return unless scheduled_at && duration_minutes
+
     scheduled_at + duration_minutes.minutes
   end
 
@@ -58,7 +61,7 @@ class Appointment < ApplicationRecord
   def must_have_at_least_one_service
     return if services.to_a.any?
 
-    errors.add(:services, :blank, message: 'must include at least one')
+    errors.add(:services, :blank, message: 'must be selected')
   end
 
   def scheduled_at_cannot_be_in_the_past
@@ -77,7 +80,10 @@ class Appointment < ApplicationRecord
   end
 
   def should_check_resource_availability?
-    resource_id.present? && scheduled_at.present? && !canceled?
+    resource_id.present? &&
+      scheduled_at.present? &&
+      duration_minutes.present? &&
+      !canceled?
   end
 
   def overlapping_appointment?

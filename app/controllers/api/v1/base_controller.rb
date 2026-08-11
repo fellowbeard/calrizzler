@@ -53,10 +53,23 @@ class Api::V1::BaseController < ActionController::API
   def render_validation_errors(record)
     render_error(
       code: 'validation_failed',
-      message: 'Validation failed.',
+      message: record.errors.full_messages.to_sentence,
       status: :unprocessable_entity,
-      details: record.errors.to_hash(true)
+      details: format_validation_details(record.errors)
     )
+  end
+
+  def format_validation_details(errors)
+    details = Hash.new { |hash, key| hash[key] = [] }
+
+    errors.each do |error|
+      details[error.attribute] << {
+        type: error.type,
+        message: error.message,
+      }
+    end
+
+    details
   end
 
   def render_not_found(exception)
@@ -76,12 +89,13 @@ class Api::V1::BaseController < ActionController::API
   end
 
   def render_error(code:, message:, status:, details: nil)
-    render json: {
-      error: {
-        code: code,
-        message: message,
-        details: details,
-      },
-    }, status: status
+    error = {
+      code: code,
+      message: message,
+    }
+
+    error[:details] = details if details.present?
+
+    render json: { error: error }, status: status
   end
 end
