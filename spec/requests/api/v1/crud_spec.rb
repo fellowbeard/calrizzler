@@ -78,6 +78,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
           client_id: client.id,
           resource_id: resource.id,
           scheduled_at: 4.days.from_now.iso8601,
+          duration_minutes: service.duration_minutes,
           status: 'scheduled',
           service_ids: [service.id],
         },
@@ -89,6 +90,26 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
       expect(json['services'].first['title']).to eq(service.title)
     end
 
+    it 'returns a validation error when duration is missing' do
+      post '/api/v1/appointments', headers: auth_headers(owner), params: {
+        appointment: {
+          client_id: client.id,
+          resource_id: resource.id,
+          scheduled_at: 5.days.from_now.iso8601,
+          status: 'scheduled',
+          service_ids: [service.id],
+        },
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+
+      expect(json.dig('error', 'details', 'duration_minutes')).to include(
+        a_hash_including(
+          'type' => 'not_a_number'
+        )
+      )
+    end
+
     it 'rejects overlapping appointments for the same resource' do
       create(:appointment, account: account, user: owner, client: client, resource: resource, services: [service],
                            scheduled_at: 5.days.from_now)
@@ -98,13 +119,16 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
           client_id: client.id,
           resource_id: resource.id,
           scheduled_at: (5.days.from_now + 15.minutes).iso8601,
+          duration_minutes: service.duration_minutes,
           status: 'scheduled',
           service_ids: [service.id],
         },
       }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(json.dig('error', 'details', 'base')).to include('Resource is already booked at the scheduled time')
+      expect(json.dig('error', 'details', 'resource')).to include(
+        a_hash_including('type' => 'taken', 'message' => 'Resource is already booked at the scheduled time')
+      )
     end
 
     it 'prevents read-only users from creating appointments' do
