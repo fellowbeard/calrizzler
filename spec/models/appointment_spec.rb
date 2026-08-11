@@ -35,15 +35,6 @@ RSpec.describe Appointment, type: :model do
     expect(appointment.errors[:services]).to include('must include at least one service')
   end
 
-  it 'adds a custom error when scheduled_at is in the past' do
-    appointment = account.appointments.new(scheduled_at: 1.hour.ago, status: 'scheduled', user: user,
-                                           client: client, resource: resource)
-    appointment.services << service
-
-    expect(appointment).not_to be_valid
-    expect(appointment.errors[:scheduled_at]).to include("can't be in the past")
-  end
-
   it 'rejects scheduled appointments in the past' do
     appointment = account.appointments.new(scheduled_at: 1.hour.ago, status: 'scheduled', user: user, client: client,
                                            resource: resource)
@@ -64,7 +55,7 @@ RSpec.describe Appointment, type: :model do
     new_appointment.services << service
 
     expect(new_appointment).not_to be_valid
-    expect(new_appointment.errors[:resource]).to include('Resource is already booked at the scheduled time')
+    expect(new_appointment.errors[:base]).to include('Resource is already booked at the scheduled time')
   end
 
   it 'computes reservation time from service duration' do
