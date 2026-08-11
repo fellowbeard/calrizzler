@@ -60,7 +60,7 @@ class Appointment < ApplicationRecord
   def must_have_at_least_one_service
     return if services.to_a.any?
 
-    errors.add(:services, :blank, message: 'must include at least one service')
+    errors.add(:services, :blank, message: 'must include at least one')
   end
 
   def scheduled_at_cannot_be_in_the_past
@@ -68,14 +68,14 @@ class Appointment < ApplicationRecord
     return if completed? || canceled?
     return if scheduled_at >= Time.current
 
-    errors.add(:scheduled_at, :past, message: "can't be in the past")
+    errors.add(:scheduled_at, :past, message: 'cannot be scheduled in the past')
   end
 
   def resource_is_available
     return unless should_check_resource_availability?
     return unless overlapping_appointment?
 
-    errors.add(:resource, :taken, message: 'Resource is already booked at the scheduled time')
+    errors.add(:resource, :taken, message: 'is already booked at the scheduled time')
   end
 
   def should_check_resource_availability?
