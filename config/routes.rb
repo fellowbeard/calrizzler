@@ -15,7 +15,12 @@ Rails.application.routes.draw do
       resources :services, only: [:index, :show, :create, :update, :destroy]
       resources :appointments, only: [:index, :show, :create, :update, :destroy]
       resources :notes, only: [:index, :show, :create, :update, :destroy]
-      resources :users, only: [:index, :show, :create, :update, :destroy]
+
+      resources :users, only: [:index, :show, :create, :update, :destroy] do
+        member do
+          patch :update_role
+        end
+      end
     end
   end
 end

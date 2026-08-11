@@ -130,6 +130,7 @@ Appointment.create!(
   client: client_one,
   scheduled_at: 2.days.from_now,
   status: 'scheduled',
+  duration_minutes: deep_tissue.duration_minutes + custom_rug.duration_minutes,
   service_ids: [deep_tissue.id, custom_rug.id]
 )
 
@@ -140,6 +141,7 @@ Appointment.create!(
   client: client_two,
   scheduled_at: 4.days.from_now,
   status: 'scheduled',
+  duration_minutes: custom_rug.duration_minutes,
   service_ids: [custom_rug.id]
 )
 
@@ -150,6 +152,7 @@ Appointment.create!(
   client: client_three,
   scheduled_at: 1.week.from_now,
   status: 'scheduled',
+  duration_minutes: follow_up.duration_minutes,
   service_ids: [follow_up.id]
 )
 
