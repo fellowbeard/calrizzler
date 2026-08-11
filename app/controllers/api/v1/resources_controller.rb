@@ -5,18 +5,21 @@ class Api::V1::ResourcesController < Api::V1::BaseController
   def index
     resources = current_account.resources.order(:name)
 
-    render json: resources
+    render json: resources.map { |resource|
+      ResourceSerializer.new(resource).as_json
+    }
   end
 
   def show
-    render json: @resource
+    render json: ResourceSerializer.new(@resource).as_json
   end
 
   def create
     resource = current_account.resources.new(resource_params)
 
     if resource.save
-      render json: resource, status: :created
+      render json: ResourceSerializer.new(resource).as_json,
+             status: :created
     else
       render_validation_errors(resource)
     end
@@ -24,14 +27,14 @@ class Api::V1::ResourcesController < Api::V1::BaseController
 
   def update
     if @resource.update(resource_params)
-      render json: @resource
+      render json: ResourceSerializer.new(@resource).as_json
     else
       render_validation_errors(@resource)
     end
   end
 
   def destroy
-    @resource.destroy
+    @resource.destroy!
     head :no_content
   end
 

@@ -11,7 +11,7 @@ echo ""
 
 # Frontend auto-fix
 echo "┌─ Frontend Auto-Fix (ESLint) ────────┐"
-cd servicebook-frontend
+cd calrizzler-frontend
 npm run lint:fix
 echo "✓ Frontend issues auto-fixed"
 cd ..

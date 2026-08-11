@@ -84,6 +84,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
       :scheduled_at,
       :status,
       :duration_minutes,
+      :duration_overridden,
       service_ids: []
     )
   end

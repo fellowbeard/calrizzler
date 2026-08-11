@@ -7,7 +7,7 @@ This project uses professional-grade linters for both the React frontend and Rai
 ### Installation
 ESLint is already configured in the frontend. Install dependencies:
 ```bash
-cd servicebook-frontend
+cd calrizzler-frontend
 npm install
 ```
 
@@ -37,7 +37,7 @@ npm run lint:report
 - **React**: Hook rules, refresh-only components
 
 ### Configuration
-See `servicebook-frontend/eslint.config.js`
+See `calrizzler-frontend/eslint.config.js`
 
 ---
 
@@ -134,7 +134,7 @@ Add linting to your CI pipeline:
 **GitHub Actions example:**
 ```yaml
 - name: Run ESLint
-  run: cd servicebook-frontend && npm run lint
+  run: cd calrizzler-frontend && npm run lint
 
 - name: Run Rubocop
   run: bundle exec rubocop
@@ -166,7 +166,7 @@ Install and restart VS Code to see linting errors inline.
 ## Customizing Rules
 
 ### For Frontend (ESLint)
-Edit `servicebook-frontend/eslint.config.js` in the `rules` section.
+Edit `calrizzler-frontend/eslint.config.js` in the `rules` section.
 
 ### For Backend (Rubocop)
 Edit `.rubocop.yml` to enable/disable cops or adjust parameters.
@@ -185,13 +185,13 @@ Create a convenient command to run all linters:
 **Frontend + Backend:**
 ```bash
 # Frontend
-cd servicebook-frontend && npm run lint
+cd calrizzler-frontend && npm run lint
 
 # Backend
 cd .. && bundle exec rubocop
 
 # With auto-fix:
-cd servicebook-frontend && npm run lint:fix
+cd calrizzler-frontend && npm run lint:fix
 cd .. && bundle exec rubocop -A
 ```
 
@@ -199,7 +199,7 @@ Or create a simple shell script:
 ```bash
 #!/bin/bash
 echo "=== Linting Frontend ==="
-cd servicebook-frontend && npm run lint
+cd calrizzler-frontend && npm run lint
 cd ..
 
 echo -e "\n=== Linting Backend ==="
