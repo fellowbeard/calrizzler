@@ -16,6 +16,6 @@ class Api::V1::AccountsController < Api::V1::BaseController
   private
 
   def account_params
-    params.require(:account).permit(:business_name)
+    params.require(:account).permit(:business_name, :timezone)
   end
 end

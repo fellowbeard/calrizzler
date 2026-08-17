@@ -11,7 +11,7 @@ class AppointmentSerializer
       resource_id: @appointment.resource_id,
       client: serialized_client,
       resource: serialized_resource,
-      scheduled_at: @appointment.scheduled_at.strftime('%Y-%m-%dT%H:%M:%S'),
+      scheduled_at: @appointment.scheduled_at.iso8601,
       status: @appointment.status,
       duration_minutes: @appointment[:duration_minutes],
       duration_overridden: @appointment.duration_overridden,

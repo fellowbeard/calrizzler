@@ -7,6 +7,7 @@ class AccountSerializer
     {
       id: @account.id,
       business_name: @account.business_name,
+      timezone: @account.timezone,
       resources: @account.resources.map do |resource|
         ResourceSerializer.new(resource).as_json
       end,

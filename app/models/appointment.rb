@@ -14,7 +14,7 @@ class Appointment < ApplicationRecord
   validates :duration_minutes,
             numericality: {
               only_integer: true,
-              greater_than_or_equal_to: 0
+              greater_than_or_equal_to: 0,
             }
 
   validate :must_have_at_least_one_service

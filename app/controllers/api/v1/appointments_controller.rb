@@ -61,7 +61,17 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   end
 
   def appointment_attributes
-    appointment_params.except(:service_ids)
+    appointment_params
+      .except(:service_ids, :scheduled_at)
+      .merge(scheduled_at: parsed_scheduled_at)
+  end
+
+  def parsed_scheduled_at
+    return nil if appointment_params[:scheduled_at].blank?
+
+    Time.find_zone!(current_account.timezone).parse(
+      appointment_params[:scheduled_at]
+    )
   end
 
   def find_account_client
