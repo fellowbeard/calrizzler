@@ -79,6 +79,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
           resource_id: resource.id,
           scheduled_at: 4.days.from_now.iso8601,
           status: 'scheduled',
+          duration_minutes: 45,
           service_ids: [service.id],
         },
       }
@@ -99,12 +100,13 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
           resource_id: resource.id,
           scheduled_at: (5.days.from_now + 15.minutes).iso8601,
           status: 'scheduled',
+          duration_minutes: 45,
           service_ids: [service.id],
         },
       }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(json.dig('error', 'details', 'base')).to include('Resource is already booked at the scheduled time')
+      expect(json.dig('error', 'details', 'resource')).to include('Resource is already booked at the scheduled time')
     end
 
     it 'prevents read-only users from creating appointments' do

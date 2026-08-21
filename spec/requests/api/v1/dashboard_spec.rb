@@ -17,7 +17,7 @@ RSpec.describe 'Api::V1::Dashboard', type: :request do
   let!(:service) { account.services.create!(title: 'Consulting', price: 180.0, duration_minutes: 60, user: user) }
   let!(:appointment) do
     appointment = account.appointments.new(scheduled_at: 2.days.from_now, status: 'scheduled', user: user,
-                                           client: client, resource: resource)
+                                           client: client, resource: resource, duration_minutes: 60)
     appointment.services << service
     appointment.save!
     appointment
