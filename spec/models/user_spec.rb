@@ -41,4 +41,20 @@ RSpec.describe User, type: :model do
     expect(staff.can_write?).to be true
     expect(read_only.can_write?).to be false
   end
+
+  it 'identifies each role' do
+    owner = build(:user, account: account, role: 'owner')
+    staff = build(:user, account: account, role: 'staff')
+    read_only = build(:user, account: account, role: 'read_only')
+
+    expect(owner).to be_owner
+    expect(owner).not_to be_staff
+    expect(owner).not_to be_read_only
+    expect(staff).to be_staff
+    expect(staff).not_to be_owner
+    expect(staff).not_to be_read_only
+    expect(read_only).to be_read_only
+    expect(read_only).not_to be_owner
+    expect(read_only).not_to be_staff
+  end
 end

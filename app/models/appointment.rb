@@ -10,6 +10,7 @@ class Appointment < ApplicationRecord
   STATUS_OPTIONS = ['scheduled', 'completed', 'canceled'].freeze
 
   validates :scheduled_at, presence: true
+  # frontend defaults to status: "scheduled" when new apt is created
   validates :status, presence: true, inclusion: { in: STATUS_OPTIONS }
   validates :duration_minutes,
             numericality: {
