@@ -95,6 +95,7 @@ Metrics/BlockLength:
     - 'db/migrate/**/*'
     - 'db/schema.rb'
     - "config/environments/*.rb"
+    - "config/routes.rb"
 
 Metrics/AbcSize:
   Max: 20

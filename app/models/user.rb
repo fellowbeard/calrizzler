@@ -6,6 +6,8 @@ class User < ApplicationRecord
   has_many :notes, dependent: :destroy
   has_many :clients, dependent: :destroy
   has_many :appointments, dependent: :nullify
+  has_many :user_invitations, foreign_key: :invited_by_id, inverse_of: :invited_by, dependent: :destroy
+  has_many :password_resets, dependent: :destroy
 
   ROLES = ['owner', 'staff', 'read_only'].freeze
 

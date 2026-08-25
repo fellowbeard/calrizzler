@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_17_184447) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_24_190136) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,6 +72,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_184447) do
     t.index ["user_id"], name: "index_notes_on_user_id"
   end
 
+  create_table "password_resets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "used_at"
+    t.bigint "user_id", null: false
+    t.index ["token_digest"], name: "index_password_resets_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_password_resets_on_user_id"
+  end
+
   create_table "resources", force: :cascade do |t|
     t.bigint "account_id"
     t.datetime "created_at", null: false
@@ -92,6 +103,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_184447) do
     t.bigint "user_id", null: false
     t.index ["account_id"], name: "index_services_on_account_id"
     t.index ["user_id"], name: "index_services_on_user_id"
+  end
+
+  create_table "user_invitations", force: :cascade do |t|
+    t.datetime "accepted_at"
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "invited_by_id", null: false
+    t.string "role", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_user_invitations_on_account_id"
+    t.index ["invited_by_id"], name: "index_user_invitations_on_invited_by_id"
+    t.index ["token_digest"], name: "index_user_invitations_on_token_digest", unique: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -117,8 +143,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_184447) do
   add_foreign_key "clients", "users"
   add_foreign_key "notes", "clients"
   add_foreign_key "notes", "users"
+  add_foreign_key "password_resets", "users"
   add_foreign_key "resources", "accounts"
   add_foreign_key "services", "accounts"
   add_foreign_key "services", "users"
+  add_foreign_key "user_invitations", "accounts"
+  add_foreign_key "user_invitations", "users", column: "invited_by_id"
   add_foreign_key "users", "accounts"
 end
