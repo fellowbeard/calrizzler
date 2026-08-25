@@ -3,6 +3,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "login", to: "auth#login"
       get "me", to: "users#me"
+      get "calendar", to: "appointments#calendar"
 
       resource :dashboard, only: :show
 
@@ -19,6 +20,16 @@ Rails.application.routes.draw do
       resources :users, only: [:index, :show, :create, :update, :destroy] do
         member do
           patch :update_role
+        end
+      end
+      resources :user_invitations, only: [:index, :create] do
+        collection do
+          post :accept
+        end
+      end
+      resources :password_resets, only: [:create] do
+        collection do
+          post :confirm
         end
       end
     end

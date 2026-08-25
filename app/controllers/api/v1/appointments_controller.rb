@@ -3,9 +3,13 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   before_action :set_appointment, only: [:show, :update, :destroy]
 
   def index
-    appointments = current_account.appointments.includes(:client, :resource, :services)
+    appointments = current_user
+                   .appointments
+                   .includes(:client, :resource, :services)
 
-    render json: appointments.map { |appointment| AppointmentSerializer.new(appointment).as_json }
+    render json: appointments.map { |appointment|
+      AppointmentSerializer.new(appointment).as_json
+    }
   end
 
   def show
@@ -16,7 +20,8 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
     appointment = build_appointment
 
     if appointment.save
-      render json: AppointmentSerializer.new(appointment).as_json, status: :created
+      render json: AppointmentSerializer.new(appointment).as_json,
+             status: :created
     else
       render_validation_errors(appointment)
     end
@@ -39,25 +44,40 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
     head :no_content
   end
 
+  def calendar
+    appointments = current_account
+                   .appointments
+                   .includes(:user, :resource)
+                   .order(:scheduled_at)
+
+    render json: appointments.map { |appointment| calendar_json(appointment) }
+  end
+
   private
 
   def set_appointment
-    @appointment = current_account.appointments.find(params[:id])
+    @appointment = current_user.appointments.find(params[:id])
   end
 
   def build_appointment
-    appointment = current_account.appointments.new(appointment_attributes)
-    appointment.user = current_user
-    appointment.client = find_account_client
+    appointment = current_user.appointments.new(appointment_attributes)
+
+    appointment.account = current_account
+    appointment.client = find_user_client
     appointment.resource = find_account_resource if appointment_params[:resource_id].present?
-    appointment.services = find_account_services
+    appointment.services = find_user_services
+
     appointment
   end
 
   def assign_update_associations
-    @appointment.client = find_account_client if appointment_params[:client_id].present?
+    @appointment.client = find_user_client if appointment_params[:client_id].present?
+
     @appointment.resource = find_account_resource if appointment_params[:resource_id].present?
-    @appointment.services = find_account_services if appointment_params.key?(:service_ids)
+
+    return unless appointment_params.key?(:service_ids)
+
+    @appointment.services = find_user_services
   end
 
   def appointment_attributes
@@ -74,17 +94,18 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
     )
   end
 
-  def find_account_client
-    current_account.clients.find(appointment_params[:client_id])
+  def find_user_client
+    current_user.clients.find(appointment_params[:client_id])
   end
 
   def find_account_resource
     current_account.resources.find(appointment_params[:resource_id])
   end
 
-  def find_account_services
+  def find_user_services
     service_ids = appointment_params[:service_ids] || []
-    current_account.services.where(id: service_ids)
+
+    current_user.services.where(id: service_ids)
   end
 
   def appointment_params
@@ -97,5 +118,17 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
       :duration_overridden,
       service_ids: []
     )
+  end
+
+  def calendar_json(appointment)
+    {
+      id: appointment.id,
+      user_id: appointment.user_id,
+      user_name: "#{appointment.user.first_name} #{appointment.user.last_name}",
+      resource_id: appointment.resource_id,
+      resource_name: appointment.resource&.name,
+      scheduled_at: appointment.scheduled_at,
+      duration_minutes: appointment.duration_minutes,
+    }
   end
 end

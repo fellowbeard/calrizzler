@@ -5,6 +5,7 @@ class Account < ApplicationRecord
   has_many :resources, dependent: :destroy
   has_many :services, dependent: :destroy
   has_many :notes, through: :clients
+  has_many :user_invitations, dependent: :destroy
 
   validates :business_name, presence: true
   validates :timezone, presence: true, inclusion: { in: ActiveSupport::TimeZone::MAPPING.values }

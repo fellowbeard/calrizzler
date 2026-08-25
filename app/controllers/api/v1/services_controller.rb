@@ -3,7 +3,8 @@ class Api::V1::ServicesController < Api::V1::BaseController
   before_action :set_service, only: [:show, :update, :destroy]
 
   def index
-    services = current_account.services.alphabetical
+    services = current_user.services.alphabetical
+
     render json: services.map { |service| ServiceSerializer.new(service).as_json }
   end
 
@@ -12,8 +13,8 @@ class Api::V1::ServicesController < Api::V1::BaseController
   end
 
   def create
-    service = current_account.services.new(service_params)
-    service.user = current_user
+    service = current_user.services.new(service_params)
+    service.account = current_account
 
     if service.save
       render json: ServiceSerializer.new(service).as_json, status: :created
@@ -38,10 +39,15 @@ class Api::V1::ServicesController < Api::V1::BaseController
   private
 
   def set_service
-    @service = current_account.services.find(params[:id])
+    @service = current_user.services.find(params[:id])
   end
 
   def service_params
-    params.require(:service).permit(:title, :price, :duration_minutes, :description)
+    params.require(:service).permit(
+      :title,
+      :price,
+      :duration_minutes,
+      :description
+    )
   end
 end

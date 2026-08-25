@@ -1,10 +1,9 @@
 class Api::V1::ClientsController < Api::V1::BaseController
   before_action :require_write_access, only: [:create, :update, :destroy]
   before_action :set_client, only: [:show, :update, :destroy]
-  before_action :require_owner_or_client_owner, only: [:update, :destroy]
 
   def index
-    clients = current_account.clients.limit(100)
+    clients = current_user.clients.limit(100)
 
     render json: clients.map { |client| ClientSerializer.new(client).as_json }
   end
@@ -14,8 +13,8 @@ class Api::V1::ClientsController < Api::V1::BaseController
   end
 
   def create
-    client = current_account.clients.new(client_params)
-    client.user = current_user
+    client = current_user.clients.new(client_params)
+    client.account = current_account
 
     if client.save
       render json: ClientSerializer.new(client).as_json, status: :created
@@ -40,21 +39,15 @@ class Api::V1::ClientsController < Api::V1::BaseController
   private
 
   def set_client
-    @client = current_account.clients.find(params[:id])
-  end
-
-  def require_owner_or_client_owner
-    return if current_user.owner?
-    return if @client.user_id == current_user.id
-
-    render_error(
-      code: 'forbidden',
-      message: 'You can only change your own clients.',
-      status: :forbidden
-    )
+    @client = current_user.clients.find(params[:id])
   end
 
   def client_params
-    params.require(:client).permit(:first_name, :last_name, :email, :phone)
+    params.require(:client).permit(
+      :first_name,
+      :last_name,
+      :email,
+      :phone
+    )
   end
 end
