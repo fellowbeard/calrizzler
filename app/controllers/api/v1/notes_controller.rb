@@ -3,7 +3,8 @@ class Api::V1::NotesController < Api::V1::BaseController
   before_action :set_note, only: [:show, :update, :destroy]
 
   def index
-    notes = current_account.notes
+    notes = current_user.notes.order(created_at: :desc)
+
     render json: notes.map { |note| NoteSerializer.new(note).as_json }
   end
 
@@ -12,9 +13,11 @@ class Api::V1::NotesController < Api::V1::BaseController
   end
 
   def create
-    client = current_account.clients.find(note_params[:client_id])
+    client = current_user.clients.find(note_params[:client_id])
+
     note = client.notes.new(body: note_params[:body])
     note.user = current_user
+
     if note.save
       render json: NoteSerializer.new(note).as_json, status: :created
     else
@@ -23,7 +26,7 @@ class Api::V1::NotesController < Api::V1::BaseController
   end
 
   def update
-    if @note.update(note_params)
+    if @note.update(body: note_params[:body])
       render json: NoteSerializer.new(@note).as_json
     else
       render_validation_errors(@note)
@@ -38,7 +41,7 @@ class Api::V1::NotesController < Api::V1::BaseController
   private
 
   def set_note
-    @note = current_account.notes.find(params[:id])
+    @note = current_user.notes.find(params[:id])
   end
 
   def note_params
