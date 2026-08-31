@@ -47,7 +47,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   def calendar
     appointments = current_account
                    .appointments
-                   .includes(:user, :resource)
+                   .includes(:client, :resource, :services)
                    .order(:scheduled_at)
 
     render json: appointments.map { |appointment| calendar_json(appointment) }
@@ -121,14 +121,23 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   end
 
   def calendar_json(appointment)
-    {
+    data = {
       id: appointment.id,
       user_id: appointment.user_id,
-      user_name: "#{appointment.user.first_name} #{appointment.user.last_name}",
       resource_id: appointment.resource_id,
       resource_name: appointment.resource&.name,
       scheduled_at: appointment.scheduled_at,
       duration_minutes: appointment.duration_minutes,
     }
+
+    return data unless appointment.user_id == current_user.id
+
+    data.merge(
+      client_id: appointment.client_id,
+      client_name: "#{appointment.client.first_name} #{appointment.client.last_name}",
+      status: appointment.status,
+      duration_overridden: appointment.duration_overridden,
+      services: appointment.services.map { |service| { id: service.id } }
+    )
   end
 end
