@@ -121,7 +121,19 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   end
 
   def calendar_json(appointment)
-    data = {
+    return base_data(appointment) unless appointment.user_id == current_user.id
+
+    base_data(appointment).merge(
+      client_id: appointment.client_id,
+      client_name: "#{appointment.client.first_name} #{appointment.client.last_name}",
+      status: appointment.status,
+      duration_overridden: appointment.duration_overridden,
+      services: appointment.services.map { |service| { id: service.id } }
+    )
+  end
+
+  def base_data(appointment)
+    {
       id: appointment.id,
       user_id: appointment.user_id,
       resource_id: appointment.resource_id,
@@ -129,15 +141,5 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
       scheduled_at: appointment.scheduled_at,
       duration_minutes: appointment.duration_minutes,
     }
-
-    return data unless appointment.user_id == current_user.id
-
-    data.merge(
-      client_id: appointment.client_id,
-      client_name: "#{appointment.client.first_name} #{appointment.client.last_name}",
-      status: appointment.status,
-      duration_overridden: appointment.duration_overridden,
-      services: appointment.services.map { |service| { id: service.id } }
-    )
   end
 end
