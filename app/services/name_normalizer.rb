@@ -40,7 +40,7 @@ class NameNormalizer
   end
 
   def initialize(text)
-    @words = text.to_s.strip.capitalize.tr('-', ' ').split
+    @words = text.to_s.strip.tr('-', ' ').split
     @index = 0
   end
 
@@ -90,7 +90,15 @@ class NameNormalizer
     @words[@index]
   end
 
+  def current_word_key
+    current_word&.downcase
+  end
+
   def next_word
     @words[@index + 1]
+  end
+
+  def next_word_key
+    next_word&.downcase
   end
 end
