@@ -11,7 +11,14 @@ class Client < ApplicationRecord
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
   validates :phone, format: { with: /\A[\d\s\-+()]+\z/ }, allow_blank: true
 
-  scope :for_user, lambda { |user|
-    where(user_id: user.id)
-  }
+  scope :for_user, lambda(user) { where(user_id: user.id) }
+
+  before_validation :format_names
+
+  private
+
+  def format_names
+    self.first_name = TextFormatter.titleize(first_name)
+    self.last_name = TextFormatter.titleize(last_name)
+  end
 end

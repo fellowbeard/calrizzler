@@ -1,14 +1,14 @@
 class Resource < ApplicationRecord
   belongs_to :account
 
-  before_validation :normalize_name
-
   validates :name, presence: true
   validates :name, uniqueness: { scope: :account_id }
 
+  before_validation :format_name
+
   private
 
-  def normalize_name
-    self.name = NameNormalizer.normalize(name)
+  def format_name
+    self.name = TextFormatter.titleize(name)
   end
 end
