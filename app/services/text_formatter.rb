@@ -13,7 +13,7 @@ class TextFormatter
   def self.phone_number(value)
     return if value.blank?
 
-    digits = value.gsub(/\D/, "")
+    digits = value.gsub(/\D/, '')
 
     return value unless digits.length == 10
 
