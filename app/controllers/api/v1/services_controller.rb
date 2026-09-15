@@ -19,7 +19,7 @@ class Api::V1::ServicesController < Api::V1::BaseController
     if service.save
       render json: ServiceSerializer.new(service).as_json, status: :created
     else
-      render_validation_errors(service)
+      render_validation_errors(service, code: 'service_validation_failed')
     end
   end
 
@@ -27,7 +27,7 @@ class Api::V1::ServicesController < Api::V1::BaseController
     if @service.update(service_params)
       render json: ServiceSerializer.new(@service).as_json
     else
-      render_validation_errors(@service)
+      render_validation_errors(@service, code: 'service_validation_failed')
     end
   end
 

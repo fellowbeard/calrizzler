@@ -23,7 +23,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
       render json: AppointmentSerializer.new(appointment).as_json,
              status: :created
     else
-      render_validation_errors(appointment)
+      render_validation_errors(appointment, code: 'appointment_validation_failed')
     end
   end
 
@@ -36,7 +36,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
 
     render json: AppointmentSerializer.new(@appointment).as_json
   rescue ActiveRecord::RecordInvalid
-    render_validation_errors(@appointment)
+    render_validation_errors(@appointment, code: 'appointment_validation_failed')
   end
 
   def destroy
