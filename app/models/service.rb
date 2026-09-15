@@ -8,7 +8,7 @@ class Service < ApplicationRecord
   validates :title, presence: true
   validates :price, numericality: { greater_than_or_equal_to: 0 }
 
-  scope :alphabetical, -> { order(:title) }
+  scope :alphabetical, lambda { order(:title) }
 
   before_validation :format_text
 
