@@ -28,7 +28,7 @@ class Api::V1::DashboardsController < Api::V1::BaseController
   end
 
   def calendar_appointments_scope
-    current_account.appointments.includes(:user, :client, :services, :resource)
+    current_account.appointments.includes(:resource)
   end
 
   def services_scope
@@ -78,7 +78,7 @@ class Api::V1::DashboardsController < Api::V1::BaseController
   end
 
   def calendar_appointment_json(appointment)
-    return AppointmentSerializer.new(appointment).as_json if appointment.user_id == current_user.id
+    return own_calendar_appointment_json(appointment) if appointment.user_id == current_user.id
 
     shared_appointment_json(appointment)
   end
@@ -87,7 +87,7 @@ class Api::V1::DashboardsController < Api::V1::BaseController
     {
       id: appointment.id,
       user_id: appointment.user_id,
-      user: user_name_json(appointment.user),
+      user: calendar_users_by_id[appointment.user_id],
       resource_id: appointment.resource_id,
       resource: resource_json(appointment.resource),
       scheduled_at: appointment.scheduled_at,
@@ -105,12 +105,14 @@ class Api::V1::DashboardsController < Api::V1::BaseController
     }
   end
 
-  def user_name_json(user)
-    {
-      id: user.id,
-      first_name: user.first_name,
-      last_name: user.last_name,
-    }
+  def calendar_users_by_id
+    @calendar_users_by_id ||= current_account.users.each_with_object({}) do |user, users|
+      users[user.id] = {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      }
+    end
   end
 
   def recent_appointment_json(appointment)
@@ -125,5 +127,18 @@ class Api::V1::DashboardsController < Api::V1::BaseController
     user.as_json(
       only: [:id, :account_id, :role, :first_name, :last_name, :email]
     )
+  end
+
+  def own_calendar_appointment_json(appointment)
+    AppointmentSerializer.new(
+      own_calendar_appointments_by_id.fetch(appointment.id)
+    ).as_json
+  end
+
+  def own_calendar_appointments_by_id
+    @own_calendar_appointments_by_id ||= current_user
+      .appointments
+      .includes(:client, :services, :resource)
+      .index_by(&:id)
   end
 end

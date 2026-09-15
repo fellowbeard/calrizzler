@@ -50,24 +50,45 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
   end
 
   describe 'resources' do
-    it 'supports create, update, and destroy for write users' do
-      post '/api/v1/resources', headers: auth_headers(staff), params: { resource: { name: 'Desk 1' } }
+    it 'supports create, update, and destroy for owners' do
+      post '/api/v1/resources',
+          headers: auth_headers(owner),
+          params: { resource: { name: 'Desk 1' } }
+
       expect(response).to have_http_status(:created)
       expect(json['name']).to eq('Desk 1')
 
       resource_id = json['id']
-      patch "/api/v1/resources/#{resource_id}", headers: auth_headers(owner), params: { resource: { name: 'Desk 2' } }
+
+      patch "/api/v1/resources/#{resource_id}",
+            headers: auth_headers(owner),
+            params: { resource: { name: 'Desk 2' } }
+
       expect(response).to have_http_status(:ok)
       expect(json['name']).to eq('Desk 2')
 
-      delete "/api/v1/resources/#{resource_id}", headers: auth_headers(owner)
+      delete "/api/v1/resources/#{resource_id}",
+            headers: auth_headers(owner)
+
       expect(response).to have_http_status(:no_content)
     end
 
-    it 'blocks read-only users from modifying resources' do
-      post '/api/v1/resources', headers: auth_headers(read_only_user), params: { resource: { name: 'Blocked' } }
+    it 'blocks staff users from modifying resources' do
+      post '/api/v1/resources',
+          headers: auth_headers(staff),
+          params: { resource: { name: 'Blocked' } }
+
       expect(response).to have_http_status(:forbidden)
-      expect(json.dig('error', 'message')).to eq('Read-only users cannot make changes.')
+      expect(json.dig('error', 'message')).to eq('Only account owners can do that.')
+    end
+
+    it 'blocks read-only users from modifying resources' do
+      post '/api/v1/resources',
+          headers: auth_headers(read_only_user),
+          params: { resource: { name: 'Blocked' } }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(json.dig('error', 'message')).to eq('Only account owners can do that.')
     end
   end
 
