@@ -42,7 +42,9 @@ class Api::V1::UsersController < Api::V1::BaseController
   end
 
   def destroy
-    @user.destroy!
+    return render_cannot_deactivate_self if @user == current_user
+
+    @user.update!(active: false)
     head :no_content
   end
 
@@ -54,7 +56,7 @@ class Api::V1::UsersController < Api::V1::BaseController
 
   def user_json(user)
     user.as_json(
-      only: [:id, :account_id, :role, :first_name, :last_name, :email]
+      only: [:id, :account_id, :role, :first_name, :last_name, :email, :active]
     )
   end
 
@@ -86,8 +88,16 @@ class Api::V1::UsersController < Api::V1::BaseController
   def requested_role
     role = params.require(:user).require(:role)
 
-    return role if User.roles.key?(role)
+    return role if User::ROLES.include?(role)
 
     raise ActionController::BadRequest, 'Invalid user role.'
+  end
+
+  def render_cannot_deactivate_self
+    render_error(
+      code: 'cannot_deactivate_self',
+      message: 'You cannot deactivate your own account.',
+      status: :unprocessable_entity
+    )
   end
 end

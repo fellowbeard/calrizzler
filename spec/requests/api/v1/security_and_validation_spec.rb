@@ -6,7 +6,9 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
   let!(:staff) { create(:user, :staff, account: account) }
   let!(:read_only_user) { create(:user, :read_only, account: account) }
   let!(:client) { create(:client, account: account, user: owner) }
-  let!(:resource) { create(:resource, account: account, name: 'Conference Room') }
+  let!(:resource) do
+    create(:resource, account: account, name: 'Conference Room')
+  end
 
   let!(:service) do
     create(
@@ -96,9 +98,11 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
            }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(json.dig('error', 'code')).to eq('validation_failed')
+      expect(json.dig('error', 'code')).to eq(
+        'client_validation_failed'
+      )
       expect(json.dig('error', 'details', 'first_name')).to include(
-        "First name can't be blank"
+        "can't be blank"
       )
     end
 
@@ -110,8 +114,11 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
            }
 
       expect(response).to have_http_status(:unprocessable_entity)
+      expect(json.dig('error', 'code')).to eq(
+        'resource_validation_failed'
+      )
       expect(json.dig('error', 'details', 'name')).to include(
-        "Name can't be blank"
+        "can't be blank"
       )
     end
 
@@ -127,11 +134,14 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
            }
 
       expect(response).to have_http_status(:unprocessable_entity)
+      expect(json.dig('error', 'code')).to eq(
+        'service_validation_failed'
+      )
       expect(json.dig('error', 'details', 'title')).to include(
-        "Title can't be blank"
+        "can't be blank"
       )
       expect(json.dig('error', 'details', 'price')).to include(
-        'Price must be greater than or equal to 0'
+        'must be greater than or equal to 0'
       )
     end
 
@@ -150,11 +160,14 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
            }
 
       expect(response).to have_http_status(:unprocessable_entity)
+      expect(json.dig('error', 'code')).to eq(
+        'appointment_validation_failed'
+      )
       expect(json.dig('error', 'details', 'status')).to include(
-        'Status is not included in the list'
+        'is not included in the list'
       )
       expect(json.dig('error', 'details', 'services')).to include(
-        'Services must include at least one'
+        'must include at least one'
       )
     end
 
@@ -395,6 +408,7 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
   describe 'account isolation' do
     let!(:other_account) { create(:account) }
     let!(:other_user) { create(:user, account: other_account) }
+
     let!(:other_client) do
       create(
         :client,
@@ -402,6 +416,7 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
         user: other_user
       )
     end
+
     let!(:other_resource) do
       create(
         :resource,
@@ -409,6 +424,7 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
         name: 'Other Room'
       )
     end
+
     let!(:other_service) do
       create(
         :service,
@@ -416,6 +432,7 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
         user: other_user
       )
     end
+
     let!(:other_appointment) do
       create(
         :appointment,
@@ -427,6 +444,7 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
         scheduled_at: 3.days.from_now
       )
     end
+
     let!(:other_note) do
       create(
         :note,
