@@ -21,7 +21,7 @@ class Api::V1::ResourcesController < Api::V1::BaseController
       render json: ResourceSerializer.new(resource).as_json,
              status: :created
     else
-      render_validation_errors(resource)
+      render_validation_errors(resource, code: 'resource_validation_failed')
     end
   end
 
@@ -29,7 +29,7 @@ class Api::V1::ResourcesController < Api::V1::BaseController
     if @resource.update(resource_params)
       render json: ResourceSerializer.new(@resource).as_json
     else
-      render_validation_errors(@resource)
+      render_validation_errors(@resource, code: 'resource_validation_failed')
     end
   end
 

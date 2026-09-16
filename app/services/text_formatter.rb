@@ -10,6 +10,14 @@ class TextFormatter
     normalized[0].upcase + normalized[1..]
   end
 
+  def self.capitalize_first_preserving_whitespace(value)
+    return if value.blank?
+
+    stripped = value.strip
+
+    stripped[0].upcase + stripped[1..]
+  end
+
   def self.phone_number(value)
     return if value.blank?
 

@@ -7,6 +7,7 @@ FactoryBot.define do
     role { 'owner' }
     password { 'password' }
     password_confirmation { 'password' }
+    active { true }
 
     trait :staff do
       role { 'staff' }
@@ -14,6 +15,10 @@ FactoryBot.define do
 
     trait :read_only do
       role { 'read_only' }
+    end
+
+    trait :inactive do
+      active { false }
     end
   end
 end

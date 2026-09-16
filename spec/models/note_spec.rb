@@ -21,14 +21,14 @@ RSpec.describe Note, type: :model do
     note = client.notes.new(body: 'Test note')
 
     expect(note).not_to be_valid
-    expect(note.errors[:user]).to include("can't be blank")
+    expect(note.errors[:user]).to include("must exist")
   end
 
   it 'requires a client' do
     note = Note.new(body: 'Test note', user: user)
 
     expect(note).not_to be_valid
-    expect(note.errors[:client]).to include("can't be blank")
+    expect(note.errors[:client]).to include("must exist")
   end
 
   it 'creates a valid note with all required attributes' do
