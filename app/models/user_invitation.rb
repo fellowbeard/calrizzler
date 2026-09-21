@@ -8,7 +8,7 @@ class UserInvitation < ApplicationRecord
   validates :role, inclusion: { in: INVITABLE_ROLES }
   validates :token_digest, presence: true, uniqueness: true
   validates :expires_at, presence: true
-  validate :email_must_not_already_exist
+  validate :email_must_not_already_exist, on: :create
 
   def expired?
     expires_at <= Time.current

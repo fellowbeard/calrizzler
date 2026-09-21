@@ -16,7 +16,7 @@ FactoryBot.define do
       if evaluator.services.any?
         appointment.services = evaluator.services
       else
-        appointment.services << build(:service, account: appointment.account, user: appointment.user)
+        appointment.services << build(:service, account: appointment.account)
       end
     end
   end

@@ -57,8 +57,7 @@ RSpec.describe 'Api::V1::Dashboard', type: :request do
     account.services.create!(
       title: 'Consulting',
       price: 180.0,
-      duration_minutes: 60,
-      user: user
+      duration_minutes: 60
     )
   end
 
@@ -66,8 +65,7 @@ RSpec.describe 'Api::V1::Dashboard', type: :request do
     account.services.create!(
       title: 'Staff Service',
       price: 100.0,
-      duration_minutes: 30,
-      user: staff
+      duration_minutes: 30
     )
   end
 

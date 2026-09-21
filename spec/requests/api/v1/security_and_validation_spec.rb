@@ -14,7 +14,6 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
     create(
       :service,
       account: account,
-      user: owner,
       title: 'Consultation',
       price: 140.0,
       duration_minutes: 45
@@ -282,19 +281,19 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
           :post,
           '/api/v1/services',
           { service: { title: 'Blocked Service', price: 10 } },
-          'Read-only users cannot make changes.',
+          'Only account owners can do that.',
         ],
         [
           :patch,
           "/api/v1/services/#{service.id}",
           { service: { title: 'Blocked Service' } },
-          'Read-only users cannot make changes.',
+          'Only account owners can do that.',
         ],
         [
           :delete,
           "/api/v1/services/#{service.id}",
           {},
-          'Read-only users cannot make changes.',
+          'Only account owners can do that.',
         ],
         [
           :post,
@@ -429,7 +428,6 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
       create(
         :service,
         account: other_account,
-        user: other_user
       )
     end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_191122) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_21_165459) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -100,9 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_191122) do
     t.decimal "price"
     t.string "title"
     t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
     t.index ["account_id"], name: "index_services_on_account_id"
-    t.index ["user_id"], name: "index_services_on_user_id"
   end
 
   create_table "user_invitations", force: :cascade do |t|
@@ -147,7 +145,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_191122) do
   add_foreign_key "password_resets", "users"
   add_foreign_key "resources", "accounts"
   add_foreign_key "services", "accounts"
-  add_foreign_key "services", "users"
   add_foreign_key "user_invitations", "accounts"
   add_foreign_key "user_invitations", "users", column: "invited_by_id"
   add_foreign_key "users", "accounts"

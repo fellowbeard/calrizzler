@@ -8,7 +8,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
   let!(:client) { create(:client, account: account, user: owner) }
   let!(:resource) { create(:resource, account: account, name: 'Conference Room') }
   let!(:service) do
-    create(:service, account: account, user: owner, title: 'Consultation', price: 140.0, duration_minutes: 45)
+    create(:service, account: account, title: 'Consultation', price: 140.0, duration_minutes: 45)
   end
   let!(:appointment) do
     create(:appointment, account: account, user: owner, client: client, resource: resource, services: [service],
@@ -161,7 +161,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
     it 'blocks read-only users from deleting services' do
       delete "/api/v1/services/#{service.id}", headers: auth_headers(read_only_user)
       expect(response).to have_http_status(:forbidden)
-      expect(json.dig('error', 'message')).to eq('Read-only users cannot make changes.')
+      expect(json.dig('error', 'message')).to eq('Only account owners can do that.')
     end
   end
 

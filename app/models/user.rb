@@ -5,7 +5,6 @@ class User < ApplicationRecord
 
   belongs_to :account
 
-  has_many :services, dependent: :destroy
   has_many :notes, dependent: :destroy
   has_many :clients, dependent: :destroy
   has_many :appointments, dependent: :restrict_with_error
