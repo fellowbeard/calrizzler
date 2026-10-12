@@ -9,6 +9,6 @@ class Note < ApplicationRecord
   private
 
   def format_body
-    self.body = TextFormatter.capitalize_first(body)
+    self.body = TextFormatter.capitalize_first_preserving_whitespace(body)
   end
 end

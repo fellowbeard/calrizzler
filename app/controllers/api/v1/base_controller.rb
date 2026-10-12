@@ -13,7 +13,7 @@ class Api::V1::BaseController < ActionController::API
     token = header&.split(' ')&.last
     payload = JwtService.decode(token)
 
-    @current_user = User.find_by(id: payload['user_id']) if payload
+    @current_user = User.active.find_by(id: payload['user_id']) if payload
   end
 
   def require_current_user
@@ -50,24 +50,14 @@ class Api::V1::BaseController < ActionController::API
     )
   end
 
-  def render_validation_errors(record)
+  def render_validation_errors(record, code: 'validation_failed')
     render_error(
-      code: 'validation_failed',
+      code: code,
       message: 'Validation failed.',
       status: :unprocessable_entity,
-      details: record.errors.to_hash(true)
+      details: record.errors.to_hash
     )
   end
-
-  # def render_not_found(exception)
-  #   render_error(
-  #     code: 'not_found',
-  #     message: exception.message,
-  #     status: :not_found
-  #   )
-  # end
-
-  # the following was added for debugging the API:not found issue with mobile. Remove it and leave the method above when no longer needed
 
   def render_not_found(exception)
     Rails.logger.error(

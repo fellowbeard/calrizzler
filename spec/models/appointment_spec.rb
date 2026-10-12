@@ -2,15 +2,45 @@ require 'rails_helper'
 
 RSpec.describe Appointment, type: :model do
   let(:account) { Account.create!(business_name: 'Acme') }
+
   let(:user) do
-    account.users.create!(first_name: 'Owner', last_name: 'One', email: 'owner@example.com', role: 'owner',
-                          password: 'password', password_confirmation: 'password')
+    account.users.create!(
+      first_name: 'Owner',
+      last_name: 'One',
+      email: 'owner@example.com',
+      role: 'owner',
+      password: 'password',
+      password_confirmation: 'password'
+    )
   end
-  let(:client) { account.clients.create!(first_name: 'Jane', last_name: 'Doe', email: 'jane@example.com', user: user) }
-  let(:resource) { account.resources.create!(name: 'Room A') }
-  let(:service) { account.services.create!(title: 'Consulting', price: 100.0, duration_minutes: 45, user: user) }
+
+  let(:client) do
+    account.clients.create!(
+      first_name: 'Jane',
+      last_name: 'Doe',
+      email: 'jane@example.com',
+      user: user
+    )
+  end
+
+  let(:resource) do
+    account.resources.create!(name: 'Room A')
+  end
+
+  let(:service) do
+    account.services.create!(
+      title: 'Consulting',
+      price: 100.0,
+      duration_minutes: 45
+    )
+  end
+
   let(:long_service) do
-    account.services.create!(title: 'Implementation', price: 200.0, duration_minutes: 90, user: user)
+    account.services.create!(
+      title: 'Implementation',
+      price: 200.0,
+      duration_minutes: 90
+    )
   end
 
   it 'requires a scheduled_at time' do

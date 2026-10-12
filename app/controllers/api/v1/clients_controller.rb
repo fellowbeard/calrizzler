@@ -19,7 +19,7 @@ class Api::V1::ClientsController < Api::V1::BaseController
     if client.save
       render json: ClientSerializer.new(client).as_json, status: :created
     else
-      render_validation_errors(client)
+      render_validation_errors(client, code: 'client_validation_failed')
     end
   end
 
@@ -27,7 +27,7 @@ class Api::V1::ClientsController < Api::V1::BaseController
     if @client.update(client_params)
       render json: ClientDetailSerializer.new(@client).as_json
     else
-      render_validation_errors(@client)
+      render_validation_errors(@client, code: 'client_validation_failed')
     end
   end
 

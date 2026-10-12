@@ -63,7 +63,7 @@ class Api::V1::UserInvitationsController < Api::V1::BaseController
         account: invitation.account,
         first_name: accept_params[:first_name],
         last_name: accept_params[:last_name],
-        email: accept_params[:email],
+        email: invitation.email,
         role: invitation.role,
         password: accept_params[:password],
         password_confirmation: accept_params[:password_confirmation]
@@ -99,7 +99,6 @@ class Api::V1::UserInvitationsController < Api::V1::BaseController
     params.require(:user).permit(
       :first_name,
       :last_name,
-      :email,
       :password,
       :password_confirmation
     )

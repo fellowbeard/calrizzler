@@ -241,6 +241,10 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.4.2)
+    rbs (4.2.0)
+      logger
+      prism (>= 1.6.0)
+      tsort
     rdoc (7.2.0)
       erb
       psych (>= 4.0.0)
@@ -302,6 +306,10 @@ GEM
       rubocop-rspec_rails (~> 2.28)
     rubocop-rspec_rails (2.29.1)
       rubocop (~> 1.61)
+    ruby-lsp (0.26.11)
+      language_server-protocol (~> 3.17.0)
+      prism (>= 1.2, < 2.0)
+      rbs (>= 3, < 5)
     ruby-progressbar (1.13.0)
     securerandom (0.4.1)
     stringio (3.2.0)
@@ -350,6 +358,7 @@ DEPENDENCIES
   rubocop-performance (~> 1.19)
   rubocop-rails (~> 2.20)
   rubocop-rspec (~> 2.24)
+  ruby-lsp
   tzinfo-data
 
 RUBY VERSION

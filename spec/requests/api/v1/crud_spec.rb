@@ -8,7 +8,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
   let!(:client) { create(:client, account: account, user: owner) }
   let!(:resource) { create(:resource, account: account, name: 'Conference Room') }
   let!(:service) do
-    create(:service, account: account, user: owner, title: 'Consultation', price: 140.0, duration_minutes: 45)
+    create(:service, account: account, title: 'Consultation', price: 140.0, duration_minutes: 45)
   end
   let!(:appointment) do
     create(:appointment, account: account, user: owner, client: client, resource: resource, services: [service],
@@ -50,24 +50,45 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
   end
 
   describe 'resources' do
-    it 'supports create, update, and destroy for write users' do
-      post '/api/v1/resources', headers: auth_headers(staff), params: { resource: { name: 'Desk 1' } }
+    it 'supports create, update, and destroy for owners' do
+      post '/api/v1/resources',
+          headers: auth_headers(owner),
+          params: { resource: { name: 'Desk 1' } }
+
       expect(response).to have_http_status(:created)
       expect(json['name']).to eq('Desk 1')
 
       resource_id = json['id']
-      patch "/api/v1/resources/#{resource_id}", headers: auth_headers(owner), params: { resource: { name: 'Desk 2' } }
+
+      patch "/api/v1/resources/#{resource_id}",
+            headers: auth_headers(owner),
+            params: { resource: { name: 'Desk 2' } }
+
       expect(response).to have_http_status(:ok)
       expect(json['name']).to eq('Desk 2')
 
-      delete "/api/v1/resources/#{resource_id}", headers: auth_headers(owner)
+      delete "/api/v1/resources/#{resource_id}",
+            headers: auth_headers(owner)
+
       expect(response).to have_http_status(:no_content)
     end
 
-    it 'blocks read-only users from modifying resources' do
-      post '/api/v1/resources', headers: auth_headers(read_only_user), params: { resource: { name: 'Blocked' } }
+    it 'blocks staff users from modifying resources' do
+      post '/api/v1/resources',
+          headers: auth_headers(staff),
+          params: { resource: { name: 'Blocked' } }
+
       expect(response).to have_http_status(:forbidden)
-      expect(json.dig('error', 'message')).to eq('Read-only users cannot make changes.')
+      expect(json.dig('error', 'message')).to eq('Only account owners can do that.')
+    end
+
+    it 'blocks read-only users from modifying resources' do
+      post '/api/v1/resources',
+          headers: auth_headers(read_only_user),
+          params: { resource: { name: 'Blocked' } }
+
+      expect(response).to have_http_status(:forbidden)
+      expect(json.dig('error', 'message')).to eq('Only account owners can do that.')
     end
   end
 
@@ -106,7 +127,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
       }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(json.dig('error', 'details', 'resource')).to include('Resource is already booked at the scheduled time')
+      expect(json.dig('error', 'details', 'resource')).to include('is already booked at the scheduled time')
     end
 
     it 'prevents read-only users from creating appointments' do
@@ -140,7 +161,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
     it 'blocks read-only users from deleting services' do
       delete "/api/v1/services/#{service.id}", headers: auth_headers(read_only_user)
       expect(response).to have_http_status(:forbidden)
-      expect(json.dig('error', 'message')).to eq('Read-only users cannot make changes.')
+      expect(json.dig('error', 'message')).to eq('Only account owners can do that.')
     end
   end
 
