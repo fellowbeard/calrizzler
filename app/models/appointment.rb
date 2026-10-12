@@ -21,6 +21,10 @@ class Appointment < ApplicationRecord
   validate :must_have_at_least_one_service
   validate :scheduled_at_cannot_be_in_the_past
   validate :resource_is_available
+  validate :user_must_belong_to_same_account
+  validate :client_must_belong_to_same_account
+  validate :resource_must_belong_to_same_account
+  validate :services_must_belong_to_same_account
 
   def convert_time
     scheduled_at.strftime('%A, %B %d, %Y')
@@ -97,5 +101,34 @@ class Appointment < ApplicationRecord
   def overlaps_with?(appointment)
     scheduled_at < appointment.ends_at &&
       ends_at > appointment.scheduled_at
+  end
+
+  def user_must_belong_to_same_account
+    return if account.blank? || user.blank?
+    return if user.account_id == account_id
+
+    errors.add(:user, "must belong to the same account")
+  end
+
+  def client_must_belong_to_same_account
+    return if account.blank? || client.blank?
+    return if client.account_id == account_id
+
+    errors.add(:client, "must belong to the same account")
+  end
+
+  def resource_must_belong_to_same_account
+    return if account.blank? || resource.blank?
+    return if resource.account_id == account_id
+
+    errors.add(:resource, "must belong to the same account")
+  end
+
+  def services_must_belong_to_same_account
+    return if account.blank?
+
+    if services.any? { |service| service.account_id != account_id }
+      errors.add(:services, "must belong to the same account")
+    end
   end
 end
