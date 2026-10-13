@@ -68,6 +68,20 @@ RSpec.describe 'Api::V1::Dashboard', type: :request do
       duration_minutes: 30
     )
   end
+  
+  before do
+    UserService.create!(
+      user: user,
+      service: service,
+      price: service.price
+    )
+
+    UserService.create!(
+      user: staff,
+      service: staff_service,
+      price: staff_service.price
+    )
+  end
 
   let!(:appointment) do
     appointment = account.appointments.new(

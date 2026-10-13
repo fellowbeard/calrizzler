@@ -43,6 +43,16 @@ RSpec.describe Appointment, type: :model do
     )
   end
 
+  before do
+    [service, long_service].each do |offered_service|
+      UserService.create!(
+        user: user,
+        service: offered_service,
+        price: offered_service.price
+      )
+    end
+  end
+
   it 'requires a scheduled_at time' do
     appointment = account.appointments.new(status: 'scheduled', user: user, client: client, resource: resource)
     appointment.services << service
