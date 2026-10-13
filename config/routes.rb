@@ -21,6 +21,8 @@ Rails.application.routes.draw do
         member do
           patch :update_role
         end
+
+        resources :user_services, only: [:index, :show, :create, :update, :destroy]
       end
       resources :user_invitations, only: [:index, :create] do
         collection do
