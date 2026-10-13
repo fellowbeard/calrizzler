@@ -1,6 +1,8 @@
 class Service < ApplicationRecord
   belongs_to :account
 
+  has_many :user_services, dependent: :destroy
+  has_many :users, through: :user_services
   has_many :appointment_services, dependent: :destroy
   has_many :appointments, through: :appointment_services
 

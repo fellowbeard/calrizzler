@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_182812) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_174017) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_182812) do
     t.index ["token_digest"], name: "index_user_invitations_on_token_digest", unique: true
   end
 
+  create_table "user_services", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "price", precision: 10, scale: 2, null: false
+    t.bigint "service_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["service_id"], name: "index_user_services_on_service_id"
+    t.index ["user_id", "service_id"], name: "index_user_services_on_user_id_and_service_id", unique: true
+    t.index ["user_id"], name: "index_user_services_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.boolean "active", default: true, null: false
@@ -149,5 +160,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_182812) do
   add_foreign_key "services", "accounts"
   add_foreign_key "user_invitations", "accounts"
   add_foreign_key "user_invitations", "users", column: "invited_by_id"
+  add_foreign_key "user_services", "services"
+  add_foreign_key "user_services", "users"
   add_foreign_key "users", "accounts"
 end
