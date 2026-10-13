@@ -427,7 +427,7 @@ RSpec.describe 'Api::V1 security and validation boundaries', type: :request do
     let!(:other_service) do
       create(
         :service,
-        account: other_account,
+        account: other_account
       )
     end
 

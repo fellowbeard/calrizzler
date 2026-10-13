@@ -31,6 +31,6 @@ class Client < ApplicationRecord
     return if account.blank? || user.blank?
     return if user.account_id == account_id
 
-    errors.add(:user, "must belong to the same account")
+    errors.add(:user, 'must belong to the same account')
   end
 end

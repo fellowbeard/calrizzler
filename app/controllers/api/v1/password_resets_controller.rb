@@ -70,8 +70,10 @@ class Api::V1::PasswordResetsController < Api::V1::BaseController
       reset.user.update!(password_params)
 
       reset.user.password_resets
-          .where(used_at: nil)
-          .update_all(used_at: Time.current)
+           .where(used_at: nil)
+           .find_each do |password_reset|
+        password_reset.update!(used_at: Time.current)
+      end
     end
   end
 end

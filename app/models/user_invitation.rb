@@ -35,6 +35,6 @@ class UserInvitation < ApplicationRecord
     return if account.blank? || invited_by.blank?
     return if invited_by.account_id == account_id
 
-    errors.add(:invited_by, "must belong to the same account")
+    errors.add(:invited_by, 'must belong to the same account')
   end
 end

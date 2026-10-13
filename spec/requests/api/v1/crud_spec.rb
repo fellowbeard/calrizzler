@@ -52,8 +52,8 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
   describe 'resources' do
     it 'supports create, update, and destroy for owners' do
       post '/api/v1/resources',
-          headers: auth_headers(owner),
-          params: { resource: { name: 'Desk 1' } }
+           headers: auth_headers(owner),
+           params: { resource: { name: 'Desk 1' } }
 
       expect(response).to have_http_status(:created)
       expect(json['name']).to eq('Desk 1')
@@ -68,15 +68,15 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
       expect(json['name']).to eq('Desk 2')
 
       delete "/api/v1/resources/#{resource_id}",
-            headers: auth_headers(owner)
+             headers: auth_headers(owner)
 
       expect(response).to have_http_status(:no_content)
     end
 
     it 'blocks staff users from modifying resources' do
       post '/api/v1/resources',
-          headers: auth_headers(staff),
-          params: { resource: { name: 'Blocked' } }
+           headers: auth_headers(staff),
+           params: { resource: { name: 'Blocked' } }
 
       expect(response).to have_http_status(:forbidden)
       expect(json.dig('error', 'message')).to eq('Only account owners can do that.')
@@ -84,8 +84,8 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
 
     it 'blocks read-only users from modifying resources' do
       post '/api/v1/resources',
-          headers: auth_headers(read_only_user),
-          params: { resource: { name: 'Blocked' } }
+           headers: auth_headers(read_only_user),
+           params: { resource: { name: 'Blocked' } }
 
       expect(response).to have_http_status(:forbidden)
       expect(json.dig('error', 'message')).to eq('Only account owners can do that.')

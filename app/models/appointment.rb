@@ -107,28 +107,28 @@ class Appointment < ApplicationRecord
     return if account.blank? || user.blank?
     return if user.account_id == account_id
 
-    errors.add(:user, "must belong to the same account")
+    errors.add(:user, 'must belong to the same account')
   end
 
   def client_must_belong_to_same_account
     return if account.blank? || client.blank?
     return if client.account_id == account_id
 
-    errors.add(:client, "must belong to the same account")
+    errors.add(:client, 'must belong to the same account')
   end
 
   def resource_must_belong_to_same_account
     return if account.blank? || resource.blank?
     return if resource.account_id == account_id
 
-    errors.add(:resource, "must belong to the same account")
+    errors.add(:resource, 'must belong to the same account')
   end
 
   def services_must_belong_to_same_account
     return if account.blank?
 
-    if services.any? { |service| service.account_id != account_id }
-      errors.add(:services, "must belong to the same account")
-    end
+    return unless services.any? { |service| service.account_id != account_id }
+
+    errors.add(:services, 'must belong to the same account')
   end
 end
