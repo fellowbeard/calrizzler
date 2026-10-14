@@ -32,7 +32,7 @@ class Api::V1::DashboardsController < Api::V1::BaseController
   end
 
   def services_scope
-    current_account.services.alphabetical
+    current_account.services.active.alphabetical
   end
 
   def resources_scope
@@ -137,12 +137,8 @@ class Api::V1::DashboardsController < Api::V1::BaseController
 
   def own_calendar_appointments_by_id
     @own_calendar_appointments_by_id ||= current_user
-                                         .appointments
-                                         .includes(
-                                           :client,
-                                           :resource,
-                                           appointment_services: :service
-                                         )
-                                         .index_by(&:id)
+                                          .appointments
+                                          .includes(:client, :resource)
+                                          .index_by(&:id)
   end
 end

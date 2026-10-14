@@ -13,7 +13,15 @@ Rails.application.routes.draw do
       resources :accounts, only: [:index, :show, :create, :update, :destroy]
 
       resources :resources, only: [:index, :show, :create, :update, :destroy]
-      resources :services, only: [:index, :show, :create, :update, :destroy]
+      resources :services, only: [:index, :show, :create, :update, :destroy] do
+        collection do
+          get :archived
+        end
+
+        member do
+          patch :restore
+        end
+      end
       resources :appointments, only: [:index, :show, :create, :update, :destroy]
       resources :notes, only: [:index, :show, :create, :update, :destroy]
 
