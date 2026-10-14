@@ -15,13 +15,19 @@ class AppointmentSerializer
       status: @appointment.status,
       duration_minutes: @appointment[:duration_minutes],
       duration_overridden: @appointment.duration_overridden,
-      services: @appointment.services.map do |service|
-        ServiceSerializer.new(service).as_json
-      end,
+      services: serialized_services,
     }
   end
 
   private
+
+  def serialized_services
+    @appointment.appointment_services.includes(:service).map do |appointment_service|
+      ServiceSerializer.new(appointment_service.service).as_json.merge(
+        price: appointment_service.price_at_booking
+      )
+    end
+  end
 
   def serialized_client
     return nil unless @appointment.client
@@ -34,8 +40,6 @@ class AppointmentSerializer
   end
 
   def serialized_resource
-    return nil unless @appointment.resource
-
     ResourceSerializer.new(@appointment.resource).as_json
   end
 end

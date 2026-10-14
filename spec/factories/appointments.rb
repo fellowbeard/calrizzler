@@ -23,14 +23,26 @@ FactoryBot.define do
     end
 
     after(:build) do |appointment, evaluator|
-      if evaluator.services.any?
-        appointment.services = evaluator.services
-      else
-        appointment.services << build(
-          :service,
-          account: appointment.account
-        )
+      selected_services =
+        if evaluator.services.any?
+          evaluator.services
+        else
+          [build(:service, account: appointment.account)]
+        end
+
+      selected_services.each do |service|
+        service.save! unless service.persisted?
+        appointment.user.save! unless appointment.user.persisted?
+
+        UserService.find_or_create_by!(
+          user: appointment.user,
+          service: service
+        ) do |offering|
+          offering.price = service.price
+        end
       end
+
+      appointment.services = selected_services
     end
   end
 end

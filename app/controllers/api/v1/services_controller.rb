@@ -1,9 +1,9 @@
 class Api::V1::ServicesController < Api::V1::BaseController
-  before_action :require_owner, only: [:create, :update, :destroy]
-  before_action :set_service, only: [:show, :update, :destroy]
+  before_action :require_owner, only: [:create, :update, :destroy, :restore, :archived]
+  before_action :set_service, only: [:show, :update, :destroy, :restore]
 
   def index
-    services = current_account.services.alphabetical
+    services = current_account.services.active.alphabetical
 
     render json: services.map { |service| ServiceSerializer.new(service).as_json }
   end
@@ -31,8 +31,19 @@ class Api::V1::ServicesController < Api::V1::BaseController
   end
 
   def destroy
-    @service.destroy
+    @service.archive!
     head :no_content
+  end
+
+  def restore
+    @service.restore!
+    render json: ServiceSerializer.new(@service).as_json
+  end
+
+  def archived
+    services = current_account.services.archived.alphabetical
+
+    render json: services.map { |service| ServiceSerializer.new(service).as_json }
   end
 
   private

@@ -111,6 +111,40 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
       expect(json['services'].first['title']).to eq(service.title)
     end
 
+    it 'returns the booked price even after the provider changes their price' do
+      offering = UserService.find_by!(
+        user: owner,
+        service: service
+      )
+
+      offering.update!(price: 95)
+
+      post '/api/v1/appointments', headers: auth_headers(owner), params: {
+        appointment: {
+          client_id: client.id,
+          resource_id: resource.id,
+          scheduled_at: 7.days.from_now.iso8601,
+          status: 'scheduled',
+          duration_minutes: 45,
+          service_ids: [service.id],
+        },
+      }
+
+      expect(response).to have_http_status(:created)
+
+      appointment_id = json['id']
+      Appointment.find(appointment_id)
+
+      expect(json['services'].first['price'].to_d).to eq(95)
+      offering.update!(price: 120)
+
+      get "/api/v1/appointments/#{appointment_id}",
+          headers: auth_headers(owner)
+
+      expect(response).to have_http_status(:ok)
+      expect(json['services'].first['price'].to_d).to eq(95)
+    end
+
     it 'rejects overlapping appointments for the same resource' do
       create(:appointment, account: account, user: owner, client: client, resource: resource, services: [service],
                            scheduled_at: 5.days.from_now)
@@ -210,5 +244,51 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
       expect(response).to have_http_status(:no_content)
       expect(Note.find_by(id: note.id)).to be_nil
     end
+  end
+
+  it 'archives a service without deleting it' do
+    delete "/api/v1/services/#{service.id}", headers: auth_headers(owner)
+
+    expect(response).to have_http_status(:no_content)
+
+    service.reload
+    expect(service.archived?).to be true
+    expect(Service.exists?(service.id)).to be true
+
+    get '/api/v1/services', headers: auth_headers(owner)
+
+    expect(response).to have_http_status(:ok)
+    expect(json.map { |item| item['id'] }).not_to include(service.id)
+  end
+
+  it 'restores an archived service' do
+    service.archive!
+
+    patch "/api/v1/services/#{service.id}/restore",
+          headers: auth_headers(owner)
+
+    expect(response).to have_http_status(:ok)
+
+    service.reload
+    expect(service.archived?).to be false
+
+    get '/api/v1/services', headers: auth_headers(owner)
+
+    expect(response).to have_http_status(:ok)
+    expect(json.map { |item| item['id'] }).to include(service.id)
+  end
+
+  it 'lists archived services separately from active services' do
+    service.archive!
+
+    get '/api/v1/services/archived', headers: auth_headers(owner)
+
+    expect(response).to have_http_status(:ok)
+    expect(json.map { |item| item['id'] }).to include(service.id)
+
+    get '/api/v1/services', headers: auth_headers(owner)
+
+    expect(response).to have_http_status(:ok)
+    expect(json.map { |item| item['id'] }).not_to include(service.id)
   end
 end
