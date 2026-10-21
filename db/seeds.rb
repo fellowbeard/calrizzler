@@ -1,3 +1,5 @@
+# rubocop:disable Metrics/BlockLength
+
 # db/seeds.rb
 #
 # Development-only demo data.
@@ -382,16 +384,18 @@ ActiveRecord::Base.transaction do
   # Seed summary
   # --------------------------------------------------
 
-  puts
-  puts 'Calrizzler development seed complete!'
-  puts '-------------------------------------'
-  puts "Accounts:             #{Account.count}"
-  puts "Users:                #{User.count}"
-  puts "Resources:            #{Resource.count}"
-  puts "Clients:              #{Client.count}"
-  puts "Services:             #{Service.count}"
-  puts "UserServices:         #{UserService.count}"
-  puts "Appointments:         #{Appointment.count}"
-  puts "AppointmentServices:  #{AppointmentService.count}"
-  puts "Notes:                #{Note.count}"
+  Rails.logger.debug
+  Rails.logger.debug 'Calrizzler development seed complete!'
+  Rails.logger.debug '-------------------------------------'
+  Rails.logger.debug "Accounts:             #{Account.count}"
+  Rails.logger.debug "Users:                #{User.count}"
+  Rails.logger.debug "Resources:            #{Resource.count}"
+  Rails.logger.debug "Clients:              #{Client.count}"
+  Rails.logger.debug "Services:             #{Service.count}"
+  Rails.logger.debug "UserServices:         #{UserService.count}"
+  Rails.logger.debug "Appointments:         #{Appointment.count}"
+  Rails.logger.debug "AppointmentServices:  #{AppointmentService.count}"
+  Rails.logger.debug "Notes:                #{Note.count}"
 end
+
+# rubocop:enable Metrics/BlockLength

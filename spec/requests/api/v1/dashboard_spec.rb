@@ -68,7 +68,7 @@ RSpec.describe 'Api::V1::Dashboard', type: :request do
       duration_minutes: 30
     )
   end
-  
+
   before do
     UserService.create!(
       user: user,
@@ -178,7 +178,7 @@ RSpec.describe 'Api::V1::Dashboard', type: :request do
     expect(response).to have_http_status(:ok)
 
     # Archived services should not appear in the available catalog.
-    service_ids = json['services'].map { |item| item['id'] }
+    service_ids = json['services'].pluck('id')
 
     expect(service_ids).not_to include(service.id)
     expect(service_ids).to include(staff_service.id)

@@ -1,9 +1,8 @@
+require 'rails_helper'
 
-require "rails_helper"
-
-RSpec.describe "Rack::Attack rate limiting", type: :request do
-  describe "POST /api/v1/login" do
-    let(:ip_address) { "203.0.113.10" }
+RSpec.describe 'Rack::Attack rate limiting', type: :request do
+  describe 'POST /api/v1/login' do
+    let(:ip_address) { '203.0.113.10' }
 
     around do |example|
       original_enabled = Rack::Attack.enabled
@@ -20,24 +19,24 @@ RSpec.describe "Rack::Attack rate limiting", type: :request do
       end
     end
 
-    it "returns 429 after five login attempts from the same IP" do
-      headers = { "REMOTE_ADDR" => ip_address }
+    it 'returns 429 after five login attempts from the same IP' do
+      headers = { 'REMOTE_ADDR' => ip_address }
 
       5.times do
-        post "/api/v1/login",
+        post '/api/v1/login',
              params: {
-               email: "nonexistent@example.com",
-               password: "incorrect"
+               email: 'nonexistent@example.com',
+               password: 'incorrect',
              },
              headers: headers
 
         expect(response).not_to have_http_status(:too_many_requests)
       end
 
-      post "/api/v1/login",
+      post '/api/v1/login',
            params: {
-             email: "nonexistent@example.com",
-             password: "incorrect"
+             email: 'nonexistent@example.com',
+             password: 'incorrect',
            },
            headers: headers
 
@@ -45,8 +44,8 @@ RSpec.describe "Rack::Attack rate limiting", type: :request do
 
       body = JSON.parse(response.body)
 
-      expect(body["error"]).to eq("too_many_requests")
-      expect(response.headers["Retry-After"]).to be_present
+      expect(body['error']).to eq('too_many_requests')
+      expect(response.headers['Retry-After']).to be_present
     end
   end
 end

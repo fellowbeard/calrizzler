@@ -258,7 +258,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
     get '/api/v1/services', headers: auth_headers(owner)
 
     expect(response).to have_http_status(:ok)
-    expect(json.map { |item| item['id'] }).not_to include(service.id)
+    expect(json.pluck('id')).not_to include(service.id)
   end
 
   it 'restores an archived service' do
@@ -275,7 +275,7 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
     get '/api/v1/services', headers: auth_headers(owner)
 
     expect(response).to have_http_status(:ok)
-    expect(json.map { |item| item['id'] }).to include(service.id)
+    expect(json.pluck('id')).to include(service.id)
   end
 
   it 'lists archived services separately from active services' do
@@ -284,11 +284,11 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
     get '/api/v1/services/archived', headers: auth_headers(owner)
 
     expect(response).to have_http_status(:ok)
-    expect(json.map { |item| item['id'] }).to include(service.id)
+    expect(json.pluck('id')).to include(service.id)
 
     get '/api/v1/services', headers: auth_headers(owner)
 
     expect(response).to have_http_status(:ok)
-    expect(json.map { |item| item['id'] }).not_to include(service.id)
+    expect(json.pluck('id')).not_to include(service.id)
   end
 end

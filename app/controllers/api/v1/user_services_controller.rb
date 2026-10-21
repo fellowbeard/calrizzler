@@ -75,7 +75,7 @@ class Api::V1::UserServicesController < Api::V1::BaseController
       title: offering.service.title,
       duration_minutes: offering.service.duration_minutes,
       description: offering.service.description,
-      price: offering.price
+      price: offering.price,
     }
   end
 end
