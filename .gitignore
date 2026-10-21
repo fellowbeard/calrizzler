@@ -39,3 +39,8 @@ calrizzler-frontend/.vite/deps/
 
 #Ignore rspec status updates
 /.rspec_status
+
+# Ignore local environment files containing secrets.
+.env
+.env.*
+!.env.example
