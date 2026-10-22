@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_164834) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_222022) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -49,6 +49,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_164834) do
     t.index ["client_id"], name: "index_appointments_on_client_id"
     t.index ["resource_id"], name: "index_appointments_on_resource_id"
     t.index ["user_id"], name: "index_appointments_on_user_id"
+  end
+
+  create_table "availability_blocks", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "ends_at", null: false
+    t.datetime "starts_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["account_id"], name: "index_availability_blocks_on_account_id"
+    t.index ["user_id", "starts_at", "ends_at"], name: "index_availability_blocks_on_user_and_times"
+    t.index ["user_id"], name: "index_availability_blocks_on_user_id"
+    t.check_constraint "ends_at > starts_at", name: "availability_blocks_valid_times"
   end
 
   create_table "clients", force: :cascade do |t|
@@ -133,6 +146,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_164834) do
     t.index ["user_id"], name: "index_user_services_on_user_id"
   end
 
+  create_table "user_working_hours", force: :cascade do |t|
+    t.time "closes_at"
+    t.datetime "created_at", null: false
+    t.integer "day_of_week", null: false
+    t.boolean "is_closed", default: false, null: false
+    t.time "opens_at"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "day_of_week"], name: "index_user_working_hours_on_user_id_and_day_of_week"
+    t.index ["user_id", "day_of_week"], name: "index_user_working_hours_unique_closed_day", unique: true, where: "(is_closed = true)"
+    t.index ["user_id"], name: "index_user_working_hours_on_user_id"
+    t.check_constraint "day_of_week >= 0 AND day_of_week <= 6", name: "user_working_hours_valid_day"
+    t.check_constraint "is_closed = true AND opens_at IS NULL AND closes_at IS NULL OR is_closed = false AND opens_at IS NOT NULL AND closes_at IS NOT NULL AND closes_at > opens_at", name: "user_working_hours_valid_times"
+  end
+
   create_table "users", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.boolean "active", default: true, null: false
@@ -147,12 +175,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_164834) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  create_table "working_hours", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.time "closes_at", null: false
+    t.datetime "created_at", null: false
+    t.integer "day_of_week", null: false
+    t.time "opens_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "day_of_week"], name: "index_working_hours_on_account_id_and_day_of_week"
+    t.index ["account_id"], name: "index_working_hours_on_account_id"
+    t.check_constraint "closes_at > opens_at", name: "working_hours_valid_times"
+    t.check_constraint "day_of_week >= 0 AND day_of_week <= 6", name: "working_hours_valid_day"
+  end
+
   add_foreign_key "appointment_services", "appointments"
   add_foreign_key "appointment_services", "services"
   add_foreign_key "appointments", "accounts"
   add_foreign_key "appointments", "clients"
   add_foreign_key "appointments", "resources"
   add_foreign_key "appointments", "users"
+  add_foreign_key "availability_blocks", "accounts"
+  add_foreign_key "availability_blocks", "users"
   add_foreign_key "clients", "accounts"
   add_foreign_key "clients", "users"
   add_foreign_key "notes", "clients"
@@ -164,5 +207,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_164834) do
   add_foreign_key "user_invitations", "users", column: "invited_by_id"
   add_foreign_key "user_services", "services"
   add_foreign_key "user_services", "users"
+  add_foreign_key "user_working_hours", "users"
   add_foreign_key "users", "accounts"
+  add_foreign_key "working_hours", "accounts"
 end

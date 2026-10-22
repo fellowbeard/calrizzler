@@ -12,6 +12,10 @@ Rails.application.routes.draw do
       resource :account, only: [:show, :update]
       resources :accounts, only: [:index, :show, :create, :update, :destroy]
 
+      resources :working_hours, only: [:index, :create, :update, :destroy]
+      resources :user_working_hours, only: [:index, :create, :update, :destroy]
+      resources :availability_blocks, only: [:index, :create, :update, :destroy]
+
       resources :resources, only: [:index, :show, :create, :update, :destroy]
       resources :services, only: [:index, :show, :create, :update, :destroy] do
         collection do
