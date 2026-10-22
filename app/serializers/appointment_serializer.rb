@@ -22,7 +22,14 @@ class AppointmentSerializer
   private
 
   def serialized_services
-    @appointment.appointment_services.includes(:service).map do |appointment_service|
+    appointment_services =
+      if @appointment.association(:appointment_services).loaded?
+        @appointment.appointment_services
+      else
+        @appointment.appointment_services.includes(:service)
+      end
+
+    appointment_services.map do |appointment_service|
       ServiceSerializer.new(appointment_service.service).as_json.merge(
         price: appointment_service.price_at_booking
       )

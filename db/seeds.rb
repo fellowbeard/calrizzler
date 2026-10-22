@@ -218,9 +218,21 @@ ActiveRecord::Base.transaction do
   )
 
   UserService.create!(
+    user: jane,
+    service: quick_consult,
+    price: 25.00
+  )
+
+  UserService.create!(
     user: susan,
     service: quick_consult,
     price: 25.00
+  )
+
+  UserService.create!(
+    user: susan,
+    service: deep_tissue,
+    price: 110.00
   )
 
   UserService.create!(
