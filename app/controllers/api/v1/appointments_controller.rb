@@ -5,7 +5,8 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   def index
     appointments = current_user
                    .appointments
-                   .includes(:client, :resource, :services)
+                   .includes(:client, :resource, appointment_services: :service)
+                   .order(:scheduled_at, :id)
 
     render json: appointments.map { |appointment|
       AppointmentSerializer.new(appointment).as_json
