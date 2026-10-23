@@ -28,9 +28,9 @@ RSpec.describe 'Api::V1::AvailabilityBlocks', type: :request do
   describe 'GET /api/v1/availability_blocks' do
     it 'allows staff to view their own blocks' do
       create_block(staff)
-
+      
       get '/api/v1/availability_blocks',
-          headers: auth_headers(staff)
+      headers: auth_headers(staff)
 
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body).length).to eq(1)
@@ -89,8 +89,8 @@ RSpec.describe 'Api::V1::AvailabilityBlocks', type: :request do
 
     it 'allows owners to create business-wide closures' do
       post '/api/v1/availability_blocks',
-          params: valid_params.merge(scope: 'account'),
-          headers: auth_headers(owner)
+           params: valid_params.merge(scope: 'account'),
+           headers: auth_headers(owner)
 
       expect(response).to have_http_status(:created)
 

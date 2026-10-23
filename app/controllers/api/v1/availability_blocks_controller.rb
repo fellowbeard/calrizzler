@@ -1,7 +1,6 @@
 class Api::V1::AvailabilityBlocksController < Api::V1::BaseController
   before_action :require_write_access, except: [:index]
-  before_action :set_user, only: [:index], unless: :account_block_request?
-  before_action :set_user, only: [:create], unless: :account_block_request?
+  before_action :set_user, only: [:index, :create], unless: :account_block_request?
   before_action :set_availability_block, only: [:update, :destroy]
 
   def index
