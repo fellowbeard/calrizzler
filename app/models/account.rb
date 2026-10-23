@@ -2,6 +2,8 @@ class Account < ApplicationRecord
   has_many :users, dependent: :destroy
   has_many :clients, dependent: :destroy
   has_many :appointments, dependent: :destroy
+  has_many :working_hours, dependent: :destroy
+  has_many :availability_blocks, dependent: :destroy
   has_many :resources, dependent: :destroy
   has_many :services, dependent: :destroy
   has_many :notes, through: :clients
