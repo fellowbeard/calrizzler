@@ -48,10 +48,7 @@ class Api::V1::AvailabilityBlocksController < Api::V1::BaseController
   end
 
   def set_availability_block
-    @availability_block = AvailabilityBlock
-                          .joins(:user)
-                          .where(users: { account_id: current_account.id })
-                          .find(params[:id])
+    @availability_block = current_account.availability_blocks.find(params[:id])
   end
 
   def require_schedule_access(user)

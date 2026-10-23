@@ -7,115 +7,142 @@ RSpec.describe 'Api::V1::AvailabilityBlocks', type: :request do
   let(:other_staff) { create(:user, account: account, role: 'staff') }
   let(:read_only) { create(:user, account: account, role: 'read_only') }
 
+  let(:path) { '/api/v1/availability_blocks' }
+  let(:start_time) { Time.utc(2026, 11, 2, 13) }
+  let(:end_time) { Time.utc(2026, 11, 2, 15) }
+  let(:updated_end_time) { Time.utc(2026, 11, 2, 18) }
+
   let(:valid_params) do
     {
       availability_block: {
-        starts_at: '2026-11-02T13:00:00Z',
-        ends_at: '2026-11-02T15:00:00Z',
+        starts_at: start_time.iso8601,
+        ends_at: end_time.iso8601,
       },
     }
   end
 
-  def create_block(user)
+  let(:update_params) do
+    { availability_block: { ends_at: updated_end_time.iso8601 } }
+  end
+
+  def create_block(user: nil, account: nil)
+    account ||= user.account
+
     AvailabilityBlock.create!(
       user: user,
-      account: user.account,
-      starts_at: Time.zone.parse('2026-11-02 13:00'),
-      ends_at: Time.zone.parse('2026-11-02 15:00')
+      account: account,
+      starts_at: start_time,
+      ends_at: end_time
     )
   end
 
   describe 'GET /api/v1/availability_blocks' do
-    it 'allows staff to view their own blocks' do
-      create_block(staff)
-      
-      get '/api/v1/availability_blocks',
-      headers: auth_headers(staff)
+    it 'allows users to view provider blocks' do
+      create_block(user: staff)
 
+      get path, headers: auth_headers(staff)
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body).length).to eq(1)
-    end
+      expect(JSON.parse(response.body).size).to eq(1)
 
-    it 'allows read-only users to view provider blocks' do
-      create_block(staff)
-
-      get '/api/v1/availability_blocks',
+      get path,
           params: { user_id: staff.id },
           headers: auth_headers(read_only)
 
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body).length).to eq(1)
+      expect(JSON.parse(response.body).size).to eq(1)
     end
 
-    it 'does not expose blocks from another account' do
-      outside_user = create(:user, account: create(:account))
-      create_block(outside_user)
+    it 'allows users to view business-wide closures' do
+      create_block(account: account)
 
-      get '/api/v1/availability_blocks',
+      get path,
+          params: { scope: 'account' },
+          headers: auth_headers(staff)
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).size).to eq(1)
+    end
+
+    it 'isolates provider and business blocks by account' do
+      outside_account = create(:account)
+      outside_user = create(:user, account: outside_account)
+
+      create_block(user: outside_user)
+      create_block(account: outside_account)
+
+      get path,
           params: { user_id: outside_user.id },
           headers: auth_headers(owner)
 
       expect(response).to have_http_status(:not_found)
+
+      get path,
+          params: { scope: 'account' },
+          headers: auth_headers(owner)
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).to be_empty
     end
   end
 
   describe 'POST /api/v1/availability_blocks' do
-    it 'allows staff to create their own block' do
-      post '/api/v1/availability_blocks',
-           params: valid_params,
-           headers: auth_headers(staff)
+    it 'allows staff to block their own time and owners to block staff time' do
+      post path, params: valid_params, headers: auth_headers(staff)
 
       expect(response).to have_http_status(:created)
       expect(staff.availability_blocks.count).to eq(1)
-    end
 
-    it 'prevents staff from blocking another provider' do
-      post '/api/v1/availability_blocks',
+      post path,
            params: valid_params.merge(user_id: other_staff.id),
-           headers: auth_headers(staff)
-
-      expect(response).to have_http_status(:forbidden)
-      expect(other_staff.availability_blocks.count).to eq(0)
-    end
-
-    it 'allows owners to block time for staff' do
-      post '/api/v1/availability_blocks',
-           params: valid_params.merge(user_id: staff.id),
            headers: auth_headers(owner)
 
       expect(response).to have_http_status(:created)
-      expect(staff.availability_blocks.count).to eq(1)
+      expect(other_staff.availability_blocks.count).to eq(1)
     end
 
-    it 'allows owners to create business-wide closures' do
-      post '/api/v1/availability_blocks',
+    it 'allows only owners to create business-wide closures' do
+      post path,
            params: valid_params.merge(scope: 'account'),
            headers: auth_headers(owner)
 
       expect(response).to have_http_status(:created)
+      expect(AvailabilityBlock.last).to have_attributes(
+        account: account,
+        user: nil
+      )
 
-      block = AvailabilityBlock.last
-      expect(block.account).to eq(account)
-      expect(block.user).to be_nil
+      post path,
+           params: valid_params.merge(scope: 'account'),
+           headers: auth_headers(staff)
+
+      expect(response).to have_http_status(:forbidden)
+      expect(account.availability_blocks.where(user_id: nil).count).to eq(1)
     end
 
-    it 'prevents read-only users from creating blocks' do
-      post '/api/v1/availability_blocks',
+    it 'enforces provider permissions' do
+      post path,
+           params: valid_params.merge(user_id: other_staff.id),
+           headers: auth_headers(staff)
+
+      expect(response).to have_http_status(:forbidden)
+
+      post path,
            params: valid_params,
            headers: auth_headers(read_only)
 
       expect(response).to have_http_status(:forbidden)
+      expect(AvailabilityBlock.count).to eq(0)
     end
 
-    it 'rejects a block with invalid times' do
+    it 'rejects invalid time ranges' do
       invalid_params = {
         availability_block: {
-          starts_at: '2026-11-02T15:00:00Z',
-          ends_at: '2026-11-02T13:00:00Z',
+          starts_at: end_time.iso8601,
+          ends_at: start_time.iso8601,
         },
       }
 
-      post '/api/v1/availability_blocks',
+      post path,
            params: invalid_params,
            headers: auth_headers(staff)
 
@@ -124,54 +151,79 @@ RSpec.describe 'Api::V1::AvailabilityBlocks', type: :request do
   end
 
   describe 'PATCH /api/v1/availability_blocks/:id' do
-    it 'allows staff to update their own block' do
-      block = create_block(staff)
+    it 'allows staff to update their own blocks' do
+      block = create_block(user: staff)
 
-      patch "/api/v1/availability_blocks/#{block.id}",
-            params: {
-              availability_block: {
-                ends_at: '2026-11-02T18:00:00Z',
-              },
-            },
+      patch "#{path}/#{block.id}",
+            params: update_params,
             headers: auth_headers(staff)
 
       expect(response).to have_http_status(:ok)
-      expect(block.reload.ends_at.utc.hour).to eq(18)
+      expect(block.reload.ends_at).to eq(updated_end_time)
     end
 
-    it 'prevents staff from updating another provider block' do
-      block = create_block(other_staff)
+    it 'allows owners to update business-wide closures' do
+      block = create_block(account: account)
 
-      patch "/api/v1/availability_blocks/#{block.id}",
-            params: {
-              availability_block: {
-                ends_at: '2026-11-02T18:00:00Z',
-              },
-            },
-            headers: auth_headers(staff)
+      patch "#{path}/#{block.id}",
+            params: update_params,
+            headers: auth_headers(owner)
 
-      expect(response).to have_http_status(:forbidden)
+      expect(response).to have_http_status(:ok)
+      expect(block.reload.ends_at).to eq(updated_end_time)
+    end
+
+    it 'prevents staff from updating other providers or business closures' do
+      [create_block(user: other_staff), create_block(account: account)].each do |block|
+        patch "#{path}/#{block.id}",
+              params: update_params,
+              headers: auth_headers(staff)
+
+        expect(response).to have_http_status(:forbidden)
+        expect(block.reload.ends_at).to eq(end_time)
+      end
     end
   end
 
   describe 'DELETE /api/v1/availability_blocks/:id' do
-    it 'allows staff to delete their own block' do
-      block = create_block(staff)
+    it 'allows staff to delete their blocks and owners to delete closures' do
+      [
+        [create_block(user: staff), staff],
+        [create_block(account: account), owner],
+      ].each do |block, actor|
+        delete "#{path}/#{block.id}", headers: auth_headers(actor)
 
-      delete "/api/v1/availability_blocks/#{block.id}",
-             headers: auth_headers(staff)
-
-      expect(response).to have_http_status(:no_content)
-      expect(AvailabilityBlock.exists?(block.id)).to be(false)
+        expect(response).to have_http_status(:no_content)
+        expect(AvailabilityBlock.exists?(block.id)).to be(false)
+      end
     end
 
-    it 'prevents staff from deleting another provider block' do
-      block = create_block(other_staff)
+    it 'prevents staff from deleting other providers or business closures' do
+      [create_block(user: other_staff), create_block(account: account)].each do |block|
+        delete "#{path}/#{block.id}", headers: auth_headers(staff)
 
-      delete "/api/v1/availability_blocks/#{block.id}",
-             headers: auth_headers(staff)
+        expect(response).to have_http_status(:forbidden)
+        expect(AvailabilityBlock.exists?(block.id)).to be(true)
+      end
+    end
+  end
 
-      expect(response).to have_http_status(:forbidden)
+  describe 'Cross-account protection' do
+    it 'prevents updating or deleting another account business closure' do
+      outside_account = create(:account)
+      block = create_block(account: outside_account)
+
+      patch "#{path}/#{block.id}",
+            params: update_params,
+            headers: auth_headers(owner)
+
+      expect(response).to have_http_status(:not_found)
+      expect(block.reload.ends_at).to eq(end_time)
+
+      delete "#{path}/#{block.id}",
+             headers: auth_headers(owner)
+
+      expect(response).to have_http_status(:not_found)
       expect(AvailabilityBlock.exists?(block.id)).to be(true)
     end
   end
