@@ -4,7 +4,7 @@ class Api::V1::AvailabilityBlocksController < Api::V1::BaseController
   before_action :set_availability_block, only: [:update, :destroy]
 
   def index
-    blocks = if params[:scope] == 'account'
+    blocks = if account_block_request?
                current_account.availability_blocks.where(user_id: nil)
              else
                @user.availability_blocks
@@ -65,7 +65,7 @@ class Api::V1::AvailabilityBlocksController < Api::V1::BaseController
   end
 
   def availability_block_params
-    params.require(:availability_block).permit(:starts_at, :ends_at)
+    params.require(:availability_block).permit(:starts_at, :ends_at, :is_available)
   end
 
   def build_availability_block

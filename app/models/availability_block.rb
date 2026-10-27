@@ -5,6 +5,7 @@ class AvailabilityBlock < ApplicationRecord
   validates :starts_at, :ends_at, presence: true
   validate :ends_after_starts
   validate :valid_block_ownership
+  validate :business_closures_cannot_be_available
 
   private
 
@@ -21,5 +22,11 @@ class AvailabilityBlock < ApplicationRecord
     elsif user && account && user.account_id != account.id
       errors.add(:account, 'must match the provider account')
     end
+  end
+
+  def business_closures_cannot_be_available
+    return unless user.nil? && is_available?
+
+    errors.add(:is_available, 'cannot be true for business-wide closures')
   end
 end
