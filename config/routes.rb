@@ -4,6 +4,7 @@ Rails.application.routes.draw do
       post "login", to: "auth#login"
       get "me", to: "users#me"
       get "calendar", to: "appointments#calendar"
+      get "availability", to: "availability#index"
 
       resource :dashboard, only: :show
 
@@ -11,6 +12,10 @@ Rails.application.routes.draw do
 
       resource :account, only: [:show, :update]
       resources :accounts, only: [:index, :show, :create, :update, :destroy]
+
+      resources :working_hours, only: [:index, :create, :update, :destroy]
+      resources :user_working_hours, only: [:index, :create, :update, :destroy]
+      resources :availability_blocks, only: [:index, :create, :update, :destroy]
 
       resources :resources, only: [:index, :show, :create, :update, :destroy]
       resources :services, only: [:index, :show, :create, :update, :destroy] do

@@ -3,7 +3,6 @@
 # db/seeds.rb
 #
 # Development-only demo data.
-#
 # Running bin/rails db:seed intentionally clears existing
 # development records and recreates the sample dataset.
 #
@@ -16,6 +15,10 @@ ActiveRecord::Base.transaction do
   # --------------------------------------------------
   # Clear existing data
   # --------------------------------------------------
+
+  AvailabilityBlock.delete_all
+  UserWorkingHour.delete_all
+  WorkingHour.delete_all
 
   AppointmentService.delete_all
   Appointment.delete_all
@@ -47,14 +50,16 @@ ActiveRecord::Base.transaction do
   # Users
   # --------------------------------------------------
 
+  development_password = '12'
+
   jane = User.create!(
     account: account_one,
     first_name: 'Jane',
     last_name: 'Stuff',
     email: 'js@example.com',
     role: 'owner',
-    password: '12',
-    password_confirmation: '12'
+    password: development_password,
+    password_confirmation: development_password
   )
 
   susan = User.create!(
@@ -63,8 +68,8 @@ ActiveRecord::Base.transaction do
     last_name: 'Staff',
     email: 'susanstaff@example.com',
     role: 'staff',
-    password: '12',
-    password_confirmation: '12'
+    password: development_password,
+    password_confirmation: development_password
   )
 
   User.create!(
@@ -73,8 +78,8 @@ ActiveRecord::Base.transaction do
     last_name: 'StaffReader',
     email: 'susettestaffreader@example.com',
     role: 'read_only',
-    password: '12',
-    password_confirmation: '12'
+    password: development_password,
+    password_confirmation: development_password
   )
 
   john = User.create!(
@@ -83,14 +88,12 @@ ActiveRecord::Base.transaction do
     last_name: 'Denver',
     email: 'jd@example.com',
     role: 'owner',
-    password: '12',
-    password_confirmation: '12'
+    password: development_password,
+    password_confirmation: development_password
   )
 
   # --------------------------------------------------
   # Resources
-  #
-  # Resources belong to Accounts and are owner-managed.
   # --------------------------------------------------
 
   chair_one = Resource.create!(
@@ -115,8 +118,6 @@ ActiveRecord::Base.transaction do
 
   # --------------------------------------------------
   # Clients
-  #
-  # Clients belong to a provider and their Account.
   # --------------------------------------------------
 
   client_one = Client.create!(
@@ -157,11 +158,6 @@ ActiveRecord::Base.transaction do
 
   # --------------------------------------------------
   # Services
-  #
-  # Services belong to Accounts, NOT individual Users.
-  #
-  # Service.price is retained temporarily for backward
-  # compatibility until appointment pricing is migrated.
   # --------------------------------------------------
 
   deep_tissue = Service.create!(
@@ -198,11 +194,7 @@ ActiveRecord::Base.transaction do
 
   # --------------------------------------------------
   # UserServices
-  #
-  # These connect providers to services they offer.
-  # Each provider has an independent price.
-  #
-  # Adding a UserService does not affect other providers.
+  # Provider-specific offerings and prices
   # --------------------------------------------------
 
   UserService.create!(
@@ -242,13 +234,131 @@ ActiveRecord::Base.transaction do
   )
 
   # --------------------------------------------------
+  # Business working hours
+  # --------------------------------------------------
+
+  # Jane's business: Monday-Friday, 9 AM-5 PM.
+  # John's business: Monday-Friday, 10 AM-6 PM.
+
+  (1..5).each do |weekday|
+    WorkingHour.create!(
+      account: account_one,
+      day_of_week: weekday,
+      opens_at: '09:00',
+      closes_at: '17:00'
+    )
+
+    WorkingHour.create!(
+      account: account_two,
+      day_of_week: weekday,
+      opens_at: '10:00',
+      closes_at: '18:00'
+    )
+  end
+
+  # --------------------------------------------------
+  # Provider working hours
+  # --------------------------------------------------
+
+  # Jane inherits her business's working hours.
+  # Susan overrides business hours on Tuesday and Thursday.
+
+  [2, 4].each do |weekday|
+    UserWorkingHour.create!(
+      user: susan,
+      day_of_week: weekday,
+      opens_at: '11:00',
+      closes_at: '19:00'
+    )
+  end
+
+  # --------------------------------------------------
+  # Availability blocks
+  # --------------------------------------------------
+
+  chicago = Time.find_zone!(account_one.timezone)
+
+  next_wednesday = chicago.today.next_occurring(:wednesday)
+  next_tuesday = chicago.today.next_occurring(:tuesday)
+  next_saturday = chicago.today.next_occurring(:saturday)
+
+  # Jane's lunch break next Wednesday: noon-1 PM.
+
+  AvailabilityBlock.create!(
+    account: account_one,
+    user: jane,
+    is_available: false,
+    starts_at: chicago.local(
+      next_wednesday.year,
+      next_wednesday.month,
+      next_wednesday.day,
+      12
+    ),
+    ends_at: chicago.local(
+      next_wednesday.year,
+      next_wednesday.month,
+      next_wednesday.day,
+      13
+    )
+  )
+
+  # Business closure next Tuesday: 9 AM-5 PM.
+  # This removes inherited business hours.
+  # Provider-specific overrides can still apply.
+
+  AvailabilityBlock.create!(
+    account: account_one,
+    is_available: false,
+    starts_at: chicago.local(
+      next_tuesday.year,
+      next_tuesday.month,
+      next_tuesday.day,
+      9
+    ),
+    ends_at: chicago.local(
+      next_tuesday.year,
+      next_tuesday.month,
+      next_tuesday.day,
+      17
+    )
+  )
+
+  # Jane opens extra availability next Saturday: 10 AM-2 PM.
+
+  AvailabilityBlock.create!(
+    account: account_one,
+    user: jane,
+    is_available: true,
+    starts_at: chicago.local(
+      next_saturday.year,
+      next_saturday.month,
+      next_saturday.day,
+      10
+    ),
+    ends_at: chicago.local(
+      next_saturday.year,
+      next_saturday.month,
+      next_saturday.day,
+      14
+    )
+  )
+
+  # --------------------------------------------------
+  # Appointment timezone helper
+  # --------------------------------------------------
+
+  # Interpret appointment times in the business's timezone.
+  # ActiveRecord stores the resulting timestamps in UTC.
+
+  business_time = lambda do |account, day_offset, hour, minute|
+    zone = Time.find_zone!(account.timezone)
+    day = zone.today + day_offset
+
+    zone.local(day.year, day.month, day.day, hour, minute)
+  end
+
+  # --------------------------------------------------
   # Appointments
-  #
-  # Appointments remain associated with their Account,
-  # provider, Client, Resource, and Services.
-  #
-  # AppointmentService pricing snapshots will be added
-  # separately during the pricing migration.
   # --------------------------------------------------
 
   Appointment.create!(
@@ -256,7 +366,7 @@ ActiveRecord::Base.transaction do
     user: jane,
     resource: chair_one,
     client: client_one,
-    scheduled_at: 2.days.from_now.change(hour: 14, min: 0),
+    scheduled_at: business_time.call(account_one, 2, 14, 0),
     status: 'scheduled',
     duration_minutes: deep_tissue.duration_minutes + custom_rug.duration_minutes,
     duration_overridden: false,
@@ -271,7 +381,7 @@ ActiveRecord::Base.transaction do
     user: jane,
     resource: chair_two,
     client: client_two,
-    scheduled_at: 4.days.from_now.change(hour: 11, min: 30),
+    scheduled_at: business_time.call(account_one, 4, 11, 30),
     status: 'scheduled',
     duration_minutes: custom_rug.duration_minutes,
     duration_overridden: false,
@@ -285,7 +395,7 @@ ActiveRecord::Base.transaction do
     user: susan,
     resource: massage_room,
     client: client_three,
-    scheduled_at: 1.day.from_now.change(hour: 16, min: 0),
+    scheduled_at: business_time.call(account_one, 1, 16, 0),
     status: 'scheduled',
     duration_minutes: 30,
     duration_overridden: true,
@@ -299,7 +409,7 @@ ActiveRecord::Base.transaction do
     user: jane,
     resource: chair_one,
     client: client_one,
-    scheduled_at: 10.days.ago.change(hour: 13, min: 0),
+    scheduled_at: business_time.call(account_one, -10, 13, 0),
     status: 'completed',
     duration_minutes: deep_tissue.duration_minutes,
     duration_overridden: false,
@@ -313,7 +423,7 @@ ActiveRecord::Base.transaction do
     user: jane,
     resource: chair_two,
     client: client_two,
-    scheduled_at: 5.days.ago.change(hour: 15, min: 30),
+    scheduled_at: business_time.call(account_one, -5, 15, 30),
     status: 'completed',
     duration_minutes: custom_rug.duration_minutes,
     duration_overridden: false,
@@ -327,7 +437,7 @@ ActiveRecord::Base.transaction do
     user: susan,
     resource: massage_room,
     client: client_three,
-    scheduled_at: 3.days.ago.change(hour: 10, min: 0),
+    scheduled_at: business_time.call(account_one, -3, 10, 0),
     status: 'canceled',
     duration_minutes: quick_consult.duration_minutes,
     duration_overridden: false,
@@ -341,7 +451,7 @@ ActiveRecord::Base.transaction do
     user: john,
     resource: john_chair,
     client: client_four,
-    scheduled_at: 1.week.from_now.change(hour: 12, min: 0),
+    scheduled_at: business_time.call(account_two, 7, 12, 0),
     status: 'scheduled',
     duration_minutes: follow_up.duration_minutes,
     duration_overridden: false,
@@ -355,7 +465,7 @@ ActiveRecord::Base.transaction do
     user: john,
     resource: john_chair,
     client: client_four,
-    scheduled_at: 14.days.ago.change(hour: 12, min: 0),
+    scheduled_at: business_time.call(account_two, -14, 12, 0),
     status: 'completed',
     duration_minutes: follow_up.duration_minutes,
     duration_overridden: false,
@@ -405,6 +515,9 @@ ActiveRecord::Base.transaction do
   Rails.logger.debug "Clients:              #{Client.count}"
   Rails.logger.debug "Services:             #{Service.count}"
   Rails.logger.debug "UserServices:         #{UserService.count}"
+  Rails.logger.debug "WorkingHours:         #{WorkingHour.count}"
+  Rails.logger.debug "UserWorkingHours:     #{UserWorkingHour.count}"
+  Rails.logger.debug "AvailabilityBlocks:   #{AvailabilityBlock.count}"
   Rails.logger.debug "Appointments:         #{Appointment.count}"
   Rails.logger.debug "AppointmentServices:  #{AppointmentService.count}"
   Rails.logger.debug "Notes:                #{Note.count}"

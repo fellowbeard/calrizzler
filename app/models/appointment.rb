@@ -21,6 +21,7 @@ class Appointment < ApplicationRecord
   validate :must_have_at_least_one_service
   validate :scheduled_at_cannot_be_in_the_past
   validate :resource_is_available
+  validate :provider_is_available
   validate :user_must_belong_to_same_account
   validate :client_must_belong_to_same_account
   validate :resource_must_belong_to_same_account
@@ -130,5 +131,21 @@ class Appointment < ApplicationRecord
     return unless services.any? { |service| service.account_id != account_id }
 
     errors.add(:services, 'must belong to the same account')
+  end
+
+  def provider_is_available
+    return if user_id.blank? || scheduled_at.blank? || duration_minutes.nil? || canceled?
+    return unless overlapping_provider_appointment?
+
+    errors.add(:user, :taken, message: 'is already booked at the scheduled time')
+  end
+
+  def overlapping_provider_appointment?
+    account.appointments
+           .where(user_id: user_id)
+           .where.not(id: id)
+           .where.not(status: 'canceled')
+           .where('scheduled_at < ?', ends_at)
+           .any? { |appointment| appointment.ends_at > scheduled_at }
   end
 end

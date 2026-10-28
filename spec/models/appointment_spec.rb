@@ -118,4 +118,90 @@ RSpec.describe Appointment, type: :model do
 
     expect(appointment.service_duration_minutes).to eq(135)
   end
+
+  it 'prevents overlapping appointments for the same provider' do
+    another_resource = account.resources.create!(name: 'Room B')
+    start_time = 1.day.from_now
+
+    existing = account.appointments.new(
+      scheduled_at: start_time,
+      status: 'scheduled',
+      user: user,
+      client: client,
+      resource: resource,
+      duration_minutes: 60
+    )
+    existing.services << service
+    existing.save!
+
+    new_appointment = account.appointments.new(
+      scheduled_at: start_time + 30.minutes,
+      status: 'scheduled',
+      user: user,
+      client: client,
+      resource: another_resource,
+      duration_minutes: 60
+    )
+    new_appointment.services << service
+
+    expect(new_appointment).not_to be_valid
+    expect(new_appointment.errors[:user]).to include(
+      'is already booked at the scheduled time'
+    )
+  end
+
+  it 'allows the same provider to have adjacent appointments' do
+    start_time = 1.day.from_now
+
+    existing = account.appointments.new(
+      scheduled_at: start_time,
+      status: 'scheduled',
+      user: user,
+      client: client,
+      resource: resource,
+      duration_minutes: 60
+    )
+    existing.services << service
+    existing.save!
+
+    new_appointment = account.appointments.new(
+      scheduled_at: start_time + 60.minutes,
+      status: 'scheduled',
+      user: user,
+      client: client,
+      resource: resource,
+      duration_minutes: 60
+    )
+    new_appointment.services << service
+
+    expect(new_appointment).to be_valid
+  end
+
+  it 'ignores canceled appointments when checking provider availability' do
+    another_resource = account.resources.create!(name: 'Room B')
+    start_time = 1.day.from_now
+
+    existing = account.appointments.new(
+      scheduled_at: start_time,
+      status: 'canceled',
+      user: user,
+      client: client,
+      resource: resource,
+      duration_minutes: 60
+    )
+    existing.services << service
+    existing.save!
+
+    new_appointment = account.appointments.new(
+      scheduled_at: start_time,
+      status: 'scheduled',
+      user: user,
+      client: client,
+      resource: another_resource,
+      duration_minutes: 60
+    )
+    new_appointment.services << service
+
+    expect(new_appointment).to be_valid
+  end
 end
