@@ -63,6 +63,139 @@ RSpec.describe 'Api::V1::AvailabilityBlocks', type: :request do
       expect(JSON.parse(response.body).size).to eq(2)
     end
 
+    it 'excludes slots overlapping a provider unavailable block' do
+      timezone = Time.find_zone!('America/Chicago')
+
+      block_start = timezone.local(
+        date.year, date.month, date.day, 12, 0
+      )
+
+      block_end = timezone.local(
+        date.year, date.month, date.day, 13, 0
+      )
+
+      AvailabilityBlock.create!(
+        account: account,
+        user: user,
+        starts_at: block_start,
+        ends_at: block_end,
+        is_available: false
+      )
+
+      get path,
+          params: {
+            date: date.iso8601,
+            duration_minutes: 60,
+            resource_id: resource.id,
+          },
+          headers: headers
+
+      expect(response).to have_http_status(:ok)
+
+      slots = response.parsed_body['slots']
+
+      expect(slots).not_to include(
+        (block_start - 45.minutes).utc.iso8601,
+        (block_start - 30.minutes).utc.iso8601,
+        (block_start - 15.minutes).utc.iso8601,
+        block_start.utc.iso8601
+      )
+
+      expect(slots).to include(
+        (block_start - 60.minutes).utc.iso8601,
+        block_end.utc.iso8601
+      )
+    end
+
+    it 'excludes slots during a business-wide closure' do
+      timezone = Time.find_zone!('America/Chicago')
+
+      closure_start = timezone.local(
+        date.year, date.month, date.day, 12, 0
+      )
+
+      closure_end = timezone.local(
+        date.year, date.month, date.day, 13, 0
+      )
+
+      AvailabilityBlock.create!(
+        account: account,
+        user: nil,
+        starts_at: closure_start,
+        ends_at: closure_end,
+        is_available: false
+      )
+
+      get path,
+          params: {
+            date: date.iso8601,
+            duration_minutes: 60,
+            resource_id: resource.id,
+          },
+          headers: headers
+
+      expect(response).to have_http_status(:ok)
+
+      slots = response.parsed_body['slots']
+
+      expect(slots).not_to include(
+        (closure_start - 45.minutes).utc.iso8601,
+        (closure_start - 30.minutes).utc.iso8601,
+        (closure_start - 15.minutes).utc.iso8601,
+        closure_start.utc.iso8601
+      )
+
+      expect(slots).to include(
+        (closure_start - 60.minutes).utc.iso8601,
+        closure_end.utc.iso8601
+      )
+    end
+
+    it 'includes extra provider availability outside business hours' do
+      timezone = Time.find_zone!('America/Chicago')
+
+      extra_start = timezone.local(
+        date.year, date.month, date.day, 18, 0
+      )
+
+      extra_end = timezone.local(
+        date.year, date.month, date.day, 20, 0
+      )
+
+      AvailabilityBlock.create!(
+        account: account,
+        user: user,
+        starts_at: extra_start,
+        ends_at: extra_end,
+        is_available: true
+      )
+
+      get path,
+          params: {
+            date: date.iso8601,
+            duration_minutes: 60,
+            resource_id: resource.id,
+          },
+          headers: headers
+
+      expect(response).to have_http_status(:ok)
+
+      slots = response.parsed_body['slots']
+
+      expect(slots).to include(
+        extra_start.utc.iso8601,
+        (extra_start + 15.minutes).utc.iso8601,
+        (extra_start + 30.minutes).utc.iso8601,
+        (extra_start + 45.minutes).utc.iso8601,
+        (extra_start + 60.minutes).utc.iso8601
+      )
+
+      expect(slots).not_to include(
+        (extra_start - 15.minutes).utc.iso8601,
+        (extra_start + 75.minutes).utc.iso8601
+      )
+    end
+
     it 'allows users to view business-wide closures' do
       create_block(account: account)
 
@@ -104,7 +237,7 @@ RSpec.describe 'Api::V1::AvailabilityBlocks', type: :request do
           headers: auth_headers(owner)
 
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body).map { |block| block['id'] }).to eq(
+      expect(JSON.parse(response.body).pluck('id')).to eq(
         [provider_block.id]
       )
     end

@@ -4,6 +4,7 @@ Rails.application.routes.draw do
       post "login", to: "auth#login"
       get "me", to: "users#me"
       get "calendar", to: "appointments#calendar"
+      get "availability", to: "availability#index"
 
       resource :dashboard, only: :show
 
