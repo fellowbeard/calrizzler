@@ -8,6 +8,7 @@ class Api::V1::DashboardsController < Api::V1::BaseController
   def dashboard_json
     {
       user: user_json(current_user),
+      users: serialized_users,
       appointments_count: user_appointments_scope.count,
       account: AccountSerializer.new(current_account).as_json,
       services: serialized_services,
@@ -140,5 +141,12 @@ class Api::V1::DashboardsController < Api::V1::BaseController
                                          .appointments
                                          .includes(:client, :resource)
                                          .index_by(&:id)
+  end
+
+  def serialized_users
+    current_account.users
+                   .where(active: true)
+                   .order(:first_name, :last_name)
+                   .map { |user| user_json(user) }
   end
 end
