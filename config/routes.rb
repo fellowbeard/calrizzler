@@ -14,7 +14,7 @@ Rails.application.routes.draw do
       resources :accounts, only: [:index, :show, :create, :update, :destroy]
 
       resources :working_hours, only: [:index, :create, :update, :destroy]
-      resources :user_working_hours, only: [:index, :create, :update, :destroy]
+      resources :user_working_hours, only: [:update, :destroy]
       resources :availability_blocks, only: [:index, :create, :update, :destroy]
 
       resources :resources, only: [:index, :show, :create, :update, :destroy]
@@ -36,6 +36,7 @@ Rails.application.routes.draw do
         end
 
         resources :user_services, only: [:index, :show, :create, :update, :destroy]
+        resources :user_working_hours, only: [:index, :create]
       end
       resources :user_invitations, only: [:index, :create] do
         collection do
