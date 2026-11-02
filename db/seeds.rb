@@ -92,6 +92,26 @@ ActiveRecord::Base.transaction do
     password_confirmation: development_password
   )
 
+  dylan = User.create!(
+    account: account_two,
+    first_name: 'Dylan',
+    last_name: 'Strings',
+    email: 'dylan@example.com',
+    role: 'staff',
+    password: development_password,
+    password_confirmation: development_password
+  )
+
+  dolly = User.create!(
+    account: account_two,
+    first_name: 'Dolly',
+    last_name: 'Harmony',
+    email: 'dolly@example.com',
+    role: 'staff',
+    password: development_password,
+    password_confirmation: development_password
+  )
+
   # --------------------------------------------------
   # Resources
   # --------------------------------------------------
@@ -114,6 +134,16 @@ ActiveRecord::Base.transaction do
   john_chair = Resource.create!(
     account: account_two,
     name: 'Chair 1'
+  )
+
+  recording_room = Resource.create!(
+    account: account_two,
+    name: 'Recording Studio'
+  )
+
+  rehearsal_room = Resource.create!(
+    account: account_two,
+    name: 'Rehearsal Room'
   )
 
   # --------------------------------------------------
@@ -156,6 +186,33 @@ ActiveRecord::Base.transaction do
     phone: '(504) 555-0103'
   )
 
+  client_five = Client.create!(
+    account: account_two,
+    user: dylan,
+    first_name: 'Ethan',
+    last_name: 'Walker',
+    email: 'ethan.walker@example.com',
+    phone: '(504) 555-0110'
+  )
+
+  client_six = Client.create!(
+    account: account_two,
+    user: dolly,
+    first_name: 'Olivia',
+    last_name: 'Reed',
+    email: 'olivia.reed@example.com',
+    phone: '(504) 555-0111'
+  )
+
+  client_seven = Client.create!(
+    account: account_two,
+    user: john,
+    first_name: 'Marcus',
+    last_name: 'Hill',
+    email: 'marcus.hill@example.com',
+    phone: '(504) 555-0112'
+  )
+
   # --------------------------------------------------
   # Services
   # --------------------------------------------------
@@ -190,6 +247,30 @@ ActiveRecord::Base.transaction do
     description: 'Follow-up service appointment and client check-in.',
     duration_minutes: 30,
     price: 40.00
+  )
+
+  guitar_lesson = Service.create!(
+    account: account_two,
+    title: 'Guitar Lesson',
+    description: 'Individual acoustic guitar instruction.',
+    duration_minutes: 60,
+    price: 75.00
+  )
+
+  vocal_coaching = Service.create!(
+    account: account_two,
+    title: 'Vocal Coaching',
+    description: 'Personalized vocal technique and performance coaching.',
+    duration_minutes: 45,
+    price: 65.00
+  )
+
+  recording_session = Service.create!(
+    account: account_two,
+    title: 'Recording Session',
+    description: 'Studio recording and production assistance.',
+    duration_minutes: 90,
+    price: 150.00
   )
 
   # --------------------------------------------------
@@ -233,6 +314,21 @@ ActiveRecord::Base.transaction do
     price: 40.00
   )
 
+  [
+    [john, guitar_lesson, 75.00],
+    [john, vocal_coaching, 65.00],
+    [dylan, guitar_lesson, 70.00],
+    [dylan, recording_session, 150.00],
+    [dolly, vocal_coaching, 80.00],
+    [dolly, recording_session, 175.00],
+  ].each do |user, service, price|
+    UserService.create!(
+      user: user,
+      service: service,
+      price: price
+    )
+  end
+
   # --------------------------------------------------
   # Business working hours
   # --------------------------------------------------
@@ -260,9 +356,17 @@ ActiveRecord::Base.transaction do
   # Provider working hours
   # --------------------------------------------------
 
-  # Jane inherits her business's working hours.
-  # Susan overrides business hours on Tuesday and Thursday.
+  # Jane inherits business hours except Wednesday,
+  # when she works a shorter day.
 
+  UserWorkingHour.create!(
+    user: jane,
+    day_of_week: 3,
+    opens_at: '09:00',
+    closes_at: '15:00'
+  )
+
+  # Susan works later on Tuesday and Thursday.
   [2, 4].each do |weekday|
     UserWorkingHour.create!(
       user: susan,
@@ -271,6 +375,91 @@ ActiveRecord::Base.transaction do
       closes_at: '19:00'
     )
   end
+
+  # Susan takes a lunch break on Wednesday.
+  # Two intervals demonstrate split shifts.
+
+  UserWorkingHour.create!(
+    user: susan,
+    day_of_week: 3,
+    opens_at: '09:00',
+    closes_at: '12:00'
+  )
+
+  UserWorkingHour.create!(
+    user: susan,
+    day_of_week: 3,
+    opens_at: '13:00',
+    closes_at: '17:00'
+  )
+
+  # Susan does not work Mondays.
+  # An explicit closed-day override replaces
+  # the business's Monday schedule.
+
+  UserWorkingHour.create!(
+    user: susan,
+    day_of_week: 1,
+    is_closed: true
+  )
+
+  # John works shorter hours on Fridays.
+
+  UserWorkingHour.create!(
+    user: john,
+    day_of_week: 5,
+    opens_at: '10:00',
+    closes_at: '15:00'
+  )
+
+  # Dylan works Monday through Thursday, noon-6 PM.
+  (1..4).each do |weekday|
+    UserWorkingHour.create!(
+      user: dylan,
+      day_of_week: weekday,
+      opens_at: '12:00',
+      closes_at: '18:00'
+    )
+  end
+
+  # Dylan does not work Fridays.
+  UserWorkingHour.create!(
+    user: dylan,
+    day_of_week: 5,
+    is_closed: true
+  )
+
+  # Dolly works mornings Monday through Wednesday.
+  (1..3).each do |weekday|
+    UserWorkingHour.create!(
+      user: dolly,
+      day_of_week: weekday,
+      opens_at: '10:00',
+      closes_at: '14:00'
+    )
+  end
+
+  # Dolly has split shifts on Thursday.
+  UserWorkingHour.create!(
+    user: dolly,
+    day_of_week: 4,
+    opens_at: '10:00',
+    closes_at: '12:00'
+  )
+
+  UserWorkingHour.create!(
+    user: dolly,
+    day_of_week: 4,
+    opens_at: '14:00',
+    closes_at: '18:00'
+  )
+
+  # Dolly takes Fridays off.
+  UserWorkingHour.create!(
+    user: dolly,
+    day_of_week: 5,
+    is_closed: true
+  )
 
   # --------------------------------------------------
   # Availability blocks
@@ -472,6 +661,54 @@ ActiveRecord::Base.transaction do
     service_ids: [
       follow_up.id,
     ]
+  )
+
+  Appointment.create!(
+    account: account_two,
+    user: dylan,
+    resource: rehearsal_room,
+    client: client_five,
+    scheduled_at: business_time.call(account_two, 3, 13, 0),
+    status: 'scheduled',
+    duration_minutes: guitar_lesson.duration_minutes,
+    duration_overridden: false,
+    service_ids: [guitar_lesson.id]
+  )
+
+  Appointment.create!(
+    account: account_two,
+    user: dolly,
+    resource: recording_room,
+    client: client_six,
+    scheduled_at: business_time.call(account_two, 5, 10, 0),
+    status: 'scheduled',
+    duration_minutes: vocal_coaching.duration_minutes,
+    duration_overridden: false,
+    service_ids: [vocal_coaching.id]
+  )
+
+  Appointment.create!(
+    account: account_two,
+    user: john,
+    resource: john_chair,
+    client: client_seven,
+    scheduled_at: business_time.call(account_two, 6, 14, 0),
+    status: 'scheduled',
+    duration_minutes: guitar_lesson.duration_minutes,
+    duration_overridden: false,
+    service_ids: [guitar_lesson.id]
+  )
+
+  Appointment.create!(
+    account: account_two,
+    user: dylan,
+    resource: recording_room,
+    client: client_five,
+    scheduled_at: business_time.call(account_two, -7, 14, 0),
+    status: 'completed',
+    duration_minutes: recording_session.duration_minutes,
+    duration_overridden: false,
+    service_ids: [recording_session.id]
   )
 
   # --------------------------------------------------
