@@ -3,6 +3,14 @@ require 'rails_helper'
 RSpec.describe AvailabilityCalculator do
   include ActiveSupport::Testing::TimeHelpers
 
+  before do
+    travel_to Time.utc(2026, 11, 8, 12)
+  end
+
+  after do
+    travel_back
+  end
+
   let(:account) { create(:account, timezone: 'America/Chicago') }
   let(:user) { create(:user, account: account) }
   let(:resource) { create(:resource, account: account) }
@@ -339,5 +347,20 @@ RSpec.describe AvailabilityCalculator do
 
     expect(slots(duration: 60)).to include(slot_at(23))
     expect(slots(duration: 60)).not_to include(slot_at(0))
+  end
+
+  it 'inherits business hours on days without provider overrides' do
+    business_hours
+
+    create(
+      :user_working_hour,
+      user: user,
+      day_of_week: 2, # Tuesday
+      opens_at: '10:00',
+      closes_at: '14:00'
+    )
+
+    expect(slots.first).to eq(slot_at(9))
+    expect(slots.last).to eq(slot_at(16))
   end
 end
