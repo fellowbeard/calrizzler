@@ -1,4 +1,3 @@
-
 class AccountSerializer
   def initialize(account)
     @account = account

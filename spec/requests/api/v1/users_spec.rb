@@ -131,24 +131,24 @@ RSpec.describe 'Api::V1::Users', type: :request do
     end
 
     it 'restores access using an existing JWT after reactivation' do
-    staff.update!(active: true)
-    staff_headers = auth_headers(staff)
+      staff.update!(active: true)
+      staff_headers = auth_headers(staff)
 
-    staff.update!(active: false)
+      staff.update!(active: false)
 
-    get '/api/v1/me', headers: staff_headers
+      get '/api/v1/me', headers: staff_headers
 
-    expect(response).to have_http_status(:unauthorized)
+      expect(response).to have_http_status(:unauthorized)
 
-    activate_user(staff)
+      activate_user(staff)
 
-    expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:ok)
 
-    get '/api/v1/me', headers: staff_headers
+      get '/api/v1/me', headers: staff_headers
 
-    expect(response).to have_http_status(:ok)
-    expect(response.parsed_body['id']).to eq(staff.id)
-  end
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body['id']).to eq(staff.id)
+    end
   end
 
   describe 'PATCH /api/v1/users/:id (avatar)' do

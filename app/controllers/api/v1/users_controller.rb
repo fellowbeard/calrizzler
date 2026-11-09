@@ -53,12 +53,12 @@ class Api::V1::UsersController < Api::V1::BaseController
   end
 
   def activate
-  if @user.update(active: true)
-    render json: user_json(@user)
-  else
-    render_validation_errors(@user)
+    if @user.update(active: true)
+      render json: user_json(@user)
+    else
+      render_validation_errors(@user)
+    end
   end
-end
 
   def me
     render json: user_json(current_user)
