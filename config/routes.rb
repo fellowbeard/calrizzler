@@ -33,6 +33,7 @@ Rails.application.routes.draw do
       resources :users, only: [:index, :show, :create, :update, :destroy] do
         member do
           patch :update_role
+          patch :activate
         end
 
         resources :user_services, only: [:index, :show, :create, :update, :destroy]
