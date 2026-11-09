@@ -29,6 +29,19 @@ class AvailabilityCalculator
              .sort
   end
 
+  def candidate_slots
+    intervals = recurring_intervals
+
+    intervals = subtract_intervals(intervals, business_closures) if inherits_business_hours?
+
+    intervals += provider_exceptions(true)
+    intervals = merge_intervals(intervals)
+
+    intervals.flat_map { |start_time, end_time| slots_between(start_time, end_time) }
+             .uniq
+             .sort
+  end
+
   private
 
   def day_start

@@ -48,7 +48,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   def calendar
     appointments = current_account
                    .appointments
-                   .includes(:client, :resource, :services)
+                   .includes(:client, :resource, :services, :user)
                    .order(:scheduled_at)
 
     render json: appointments.map { |appointment| calendar_json(appointment) }
@@ -129,7 +129,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
       client_name: "#{appointment.client.first_name} #{appointment.client.last_name}",
       status: appointment.status,
       duration_overridden: appointment.duration_overridden,
-      services: appointment.services.map { |service| { id: service.id } }
+      services: appointment.services.map { |service| { id: service.id, title: service.title } }
     )
   end
 
@@ -137,6 +137,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
     {
       id: appointment.id,
       user_id: appointment.user_id,
+      user_name: "#{appointment.user.first_name} #{appointment.user.last_name}",
       resource_id: appointment.resource_id,
       resource_name: appointment.resource&.name,
       scheduled_at: appointment.scheduled_at,
