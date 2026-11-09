@@ -129,7 +129,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
       client_name: "#{appointment.client.first_name} #{appointment.client.last_name}",
       status: appointment.status,
       duration_overridden: appointment.duration_overridden,
-      services: appointment.services.map { |service| { id: service.id,  title: service.title } }
+      services: appointment.services.map { |service| { id: service.id, title: service.title } }
     )
   end
 

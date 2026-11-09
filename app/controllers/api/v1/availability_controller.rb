@@ -4,19 +4,9 @@ class Api::V1::AvailabilityController < Api::V1::BaseController
     duration = Integer(params.require(:duration_minutes), 10)
     resource = current_account.resources.find(params.require(:resource_id))
 
-    calculator = AvailabilityCalculator.new(
-      user: current_user,
-      date: date,
-      duration_minutes: duration,
-      resource: resource
-    )
+    calculator = availability_calculator(date, duration, resource)
 
-    render json: {
-      date: date.iso8601,
-      timezone: current_account.timezone,
-      slots: calculator.available_slots,
-      candidate_slots: calculator.candidate_slots,
-    }
+    render json: availability_response(date, calculator)
   rescue ActionController::ParameterMissing, ArgumentError => e
     render json: {
       error: {
@@ -28,12 +18,21 @@ class Api::V1::AvailabilityController < Api::V1::BaseController
 
   private
 
-  def available_slots(date, duration, resource)
+  def availability_response(date, calculator)
+    {
+      date: date.iso8601,
+      timezone: current_account.timezone,
+      slots: calculator.available_slots,
+      candidate_slots: calculator.candidate_slots,
+    }
+  end
+
+  def availability_calculator(date, duration, resource)
     AvailabilityCalculator.new(
       user: current_user,
       date: date,
       duration_minutes: duration,
       resource: resource
-    ).available_slots
+    )
   end
 end

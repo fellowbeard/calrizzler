@@ -38,8 +38,8 @@ class AvailabilityCalculator
     intervals = merge_intervals(intervals)
 
     intervals.flat_map { |start_time, end_time| slots_between(start_time, end_time) }
-            .uniq
-            .sort
+             .uniq
+             .sort
   end
 
   private
