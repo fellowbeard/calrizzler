@@ -17,31 +17,31 @@ RSpec.describe 'Api::V1::UserWorkingHours', type: :request do
     }
   end
 
-  describe 'GET /api/v1/user_working_hours' do
+  describe 'GET /api/v1/users/:user_id/user_working_hours' do
     it 'allows staff to view their own hours' do
       create(:user_working_hour, user: staff)
 
-      get '/api/v1/user_working_hours', headers: auth_headers(staff)
+      get "/api/v1/users/#{staff.id}/user_working_hours",
+          headers: auth_headers(staff)
 
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body).length).to eq(1)
+      expect(response.parsed_body.length).to eq(1)
     end
 
     it 'allows read-only users to view provider hours' do
       create(:user_working_hour, user: staff)
 
-      get '/api/v1/user_working_hours',
-          params: { user_id: staff.id },
+      get "/api/v1/users/#{staff.id}/user_working_hours",
           headers: auth_headers(read_only)
 
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body).length).to eq(1)
+      expect(response.parsed_body.length).to eq(1)
     end
   end
 
-  describe 'POST /api/v1/user_working_hours' do
+  describe 'POST /api/v1/users/:user_id/user_working_hours' do
     it 'allows staff to create their own hours outside business hours' do
-      post '/api/v1/user_working_hours',
+      post "/api/v1/users/#{staff.id}/user_working_hours",
            params: valid_params,
            headers: auth_headers(staff)
 
@@ -50,8 +50,8 @@ RSpec.describe 'Api::V1::UserWorkingHours', type: :request do
     end
 
     it 'prevents staff from modifying another provider schedule' do
-      post '/api/v1/user_working_hours',
-           params: valid_params.merge(user_id: other_staff.id),
+      post "/api/v1/users/#{other_staff.id}/user_working_hours",
+           params: valid_params,
            headers: auth_headers(staff)
 
       expect(response).to have_http_status(:forbidden)
@@ -59,8 +59,8 @@ RSpec.describe 'Api::V1::UserWorkingHours', type: :request do
     end
 
     it 'allows owners to create hours for staff' do
-      post '/api/v1/user_working_hours',
-           params: valid_params.merge(user_id: staff.id),
+      post "/api/v1/users/#{staff.id}/user_working_hours",
+           params: valid_params,
            headers: auth_headers(owner)
 
       expect(response).to have_http_status(:created)
@@ -68,7 +68,7 @@ RSpec.describe 'Api::V1::UserWorkingHours', type: :request do
     end
 
     it 'prevents read-only users from creating hours' do
-      post '/api/v1/user_working_hours',
+      post "/api/v1/users/#{read_only.id}/user_working_hours",
            params: valid_params,
            headers: auth_headers(read_only)
 
