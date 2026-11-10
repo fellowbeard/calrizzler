@@ -98,7 +98,9 @@ RSpec.describe Appointment, type: :model do
     new_appointment.services << service
 
     expect(new_appointment).not_to be_valid
-    expect(new_appointment.errors[:resource]).to include('is already booked at the scheduled time')
+    expect(new_appointment.errors[:resource]).to include(
+      'Room A is already booked at the scheduled time. Please choose another time or space.'
+    )
   end
 
   it 'computes reservation time from service duration' do
