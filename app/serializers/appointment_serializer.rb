@@ -15,6 +15,7 @@ class AppointmentSerializer
       status: @appointment.status,
       duration_minutes: @appointment[:duration_minutes],
       duration_overridden: @appointment.duration_overridden,
+      notes: @appointment.notes,
       services: serialized_services,
     }
   end

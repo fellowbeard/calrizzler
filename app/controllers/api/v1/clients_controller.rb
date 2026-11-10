@@ -3,9 +3,10 @@ class Api::V1::ClientsController < Api::V1::BaseController
   before_action :set_client, only: [:show, :update, :destroy]
 
   def index
-    clients = current_user.clients.limit(100)
+    clients = current_user.clients.order(:last_name, :first_name, :id)
+    clients = search_clients(clients) if params[:search].present?
 
-    render json: clients.map { |client| ClientSerializer.new(client).as_json }
+    render json: clients.limit(100).map { |client| ClientSerializer.new(client).as_json }
   end
 
   def show
@@ -47,7 +48,28 @@ class Api::V1::ClientsController < Api::V1::BaseController
       :first_name,
       :last_name,
       :email,
-      :phone
+      :phone,
+      :address_line1,
+      :address_line2,
+      :city,
+      :state,
+      :postal_code
+    )
+  end
+
+  def search_clients(clients)
+    term = params[:search].strip
+    term = TextFormatter.phone_number(term) if term.gsub(/\D/, '').length == 10
+
+    search = "%#{ActiveRecord::Base.sanitize_sql_like(term)}%"
+
+    clients.where(
+      "first_name ILIKE :search OR
+      last_name ILIKE :search OR
+      CONCAT_WS(' ', first_name, last_name) ILIKE :search OR
+      email ILIKE :search OR
+      phone ILIKE :search",
+      search: search
     )
   end
 end

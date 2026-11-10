@@ -82,9 +82,11 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   end
 
   def appointment_attributes
-    appointment_params
-      .except(:service_ids, :scheduled_at)
-      .merge(scheduled_at: parsed_scheduled_at)
+    attributes = appointment_params.except(:service_ids, :scheduled_at)
+
+    attributes[:scheduled_at] = parsed_scheduled_at if appointment_params.key?(:scheduled_at)
+
+    attributes
   end
 
   def parsed_scheduled_at
@@ -117,6 +119,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
       :status,
       :duration_minutes,
       :duration_overridden,
+      :notes,
       service_ids: []
     )
   end
@@ -129,6 +132,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
       client_name: "#{appointment.client.first_name} #{appointment.client.last_name}",
       status: appointment.status,
       duration_overridden: appointment.duration_overridden,
+      notes: appointment.notes,
       services: appointment.services.map { |service| { id: service.id, title: service.title } }
     )
   end

@@ -5,6 +5,7 @@ Rails.application.routes.draw do
       get "me", to: "users#me"
       get "calendar", to: "appointments#calendar"
       get "availability", to: "availability#index"
+      get "search", to: "search#index"
 
       resource :dashboard, only: :show
 

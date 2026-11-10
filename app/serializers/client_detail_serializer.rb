@@ -20,6 +20,18 @@ class ClientDetailSerializer
       appointments: @client.appointments.order(scheduled_at: :desc).map do |appointment|
         AppointmentSerializer.new(appointment).as_json
       end,
+    }.merge(address_attributes)
+  end
+
+  private
+
+  def address_attributes
+    {
+      address_line1: @client.address_line1,
+      address_line2: @client.address_line2,
+      city: @client.city,
+      state: @client.state,
+      postal_code: @client.postal_code,
     }
   end
 end
