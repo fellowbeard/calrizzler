@@ -79,7 +79,11 @@ class Appointment < ApplicationRecord
     return unless should_check_resource_availability?
     return unless overlapping_appointment?
 
-    errors.add(:resource, :taken, message: 'is already booked at the scheduled time')
+    errors.add(
+      :resource,
+      :taken,
+      message: "#{resource.name} is already booked at the scheduled time. Please choose another time or space."
+    )
   end
 
   def should_check_resource_availability?
