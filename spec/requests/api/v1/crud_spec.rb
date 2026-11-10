@@ -47,6 +47,134 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
       delete "/api/v1/clients/#{client.id}", headers: auth_headers(owner)
       expect(response).to have_http_status(:no_content)
     end
+
+    it 'searches clients by name, email, and phone' do
+      matching_client = create(
+        :client,
+        account: account,
+        user: owner,
+        first_name: 'Penelope',
+        last_name: 'Smith',
+        email: 'penelope@example.com',
+        phone: '504-555-1234'
+      )
+
+      create(
+        :client,
+        account: account,
+        user: owner,
+        first_name: 'Robert',
+        last_name: 'Jones',
+        email: 'robert@example.com',
+        phone: '504-555-9999'
+      )
+
+      ['penelope', 'SMITH', 'Penelope Smith', 'penelope@example.com', '504-555-1234'].each do |search|
+        get '/api/v1/clients',
+            headers: auth_headers(owner),
+            params: { search: search }
+
+        expect(json.pluck('id')).to eq([matching_client.id]), "Failed search: #{search}"
+
+        expect(response).to have_http_status(:ok)
+        expect(json.pluck('id')).to eq([matching_client.id])
+      end
+    end
+
+    it 'returns clients alphabetically when no search is provided' do
+      zulu = create(:client, account: account, user: owner, first_name: 'Zoe', last_name: 'Zulu')
+      alpha = create(:client, account: account, user: owner, first_name: 'Amy', last_name: 'Alpha')
+
+      get '/api/v1/clients', headers: auth_headers(owner)
+
+      expect(response).to have_http_status(:ok)
+
+      ids = json.pluck('id')
+
+      expect(ids.index(alpha.id)).to be < ids.index(zulu.id)
+    end
+
+    it 'does not expose another user clients in search results' do
+      other_client = create(
+        :client,
+        account: account,
+        user: staff,
+        first_name: 'Private',
+        last_name: 'Customer'
+      )
+
+      get '/api/v1/clients',
+          headers: auth_headers(owner),
+          params: { search: 'Private' }
+
+      expect(response).to have_http_status(:ok)
+      expect(json.pluck('id')).not_to include(other_client.id)
+    end
+
+    it 'returns an empty array when no clients match' do
+      get '/api/v1/clients',
+          headers: auth_headers(owner),
+          params: { search: 'NonexistentCustomer123' }
+
+      expect(response).to have_http_status(:ok)
+      expect(json).to eq([])
+    end
+
+    it 'creates a client with an address' do
+      post '/api/v1/clients',
+           headers: auth_headers(owner),
+           params: {
+             client: {
+               first_name: 'Jane',
+               last_name: 'Smith',
+               address_line1: '123 Main Street',
+               address_line2: 'Apt 4',
+               city: 'New Orleans',
+               state: 'LA',
+               postal_code: '70115',
+             },
+           }
+
+      expect(response).to have_http_status(:created)
+      expect(json).to include(
+        'address_line1' => '123 Main Street',
+        'address_line2' => 'Apt 4',
+        'city' => 'New Orleans',
+        'state' => 'LA',
+        'postal_code' => '70115'
+      )
+
+      created_client = Client.find(json['id'])
+      expect(created_client.address_line1).to eq('123 Main Street')
+    end
+
+    it 'updates and returns a client address' do
+      patch "/api/v1/clients/#{client.id}",
+            headers: auth_headers(owner),
+            params: {
+              client: {
+                address_line1: '456 Oak Street',
+                city: 'New Orleans',
+                state: 'LA',
+                postal_code: '70118',
+              },
+            }
+
+      expect(response).to have_http_status(:ok)
+      expect(json).to include(
+        'address_line1' => '456 Oak Street',
+        'city' => 'New Orleans',
+        'state' => 'LA',
+        'postal_code' => '70118'
+      )
+
+      get "/api/v1/clients/#{client.id}",
+          headers: auth_headers(owner)
+
+      expect(response).to have_http_status(:ok)
+      expect(json['address_line1']).to eq('456 Oak Street')
+      expect(json['postal_code']).to eq('70118')
+    end
   end
 
   describe 'resources' do
@@ -109,6 +237,60 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
       expect(json['client_id']).to eq(client.id)
       expect(json['services']).to be_an(Array)
       expect(json['services'].first['title']).to eq(service.title)
+    end
+
+    it 'creates an appointment with notes' do
+      post '/api/v1/appointments',
+           headers: auth_headers(owner),
+           params: {
+             appointment: {
+               client_id: client.id,
+               resource_id: resource.id,
+               scheduled_at: 4.days.from_now.iso8601,
+               status: 'scheduled',
+               duration_minutes: 45,
+               service_ids: [service.id],
+               notes: 'Client requested extra time for consultation.',
+             },
+           }
+
+      expect(response).to have_http_status(:created)
+      expect(json['notes']).to eq('Client requested extra time for consultation.')
+
+      created_appointment = Appointment.find(json['id'])
+      expect(created_appointment.notes).to eq('Client requested extra time for consultation.')
+    end
+
+    it 'updates and clears appointment notes' do
+      patch "/api/v1/appointments/#{appointment.id}",
+            headers: auth_headers(owner),
+            params: {
+              appointment: {
+                notes: 'Discussed follow-up services.',
+              },
+            }
+
+      expect(response).to have_http_status(:ok)
+      expect(json['notes']).to eq('Discussed follow-up services.')
+      expect(appointment.reload.notes).to eq('Discussed follow-up services.')
+
+      get "/api/v1/appointments/#{appointment.id}",
+          headers: auth_headers(owner)
+
+      expect(response).to have_http_status(:ok)
+      expect(json['notes']).to eq('Discussed follow-up services.')
+
+      patch "/api/v1/appointments/#{appointment.id}",
+            headers: auth_headers(owner),
+            params: {
+              appointment: {
+                notes: '',
+              },
+            }
+
+      expect(response).to have_http_status(:ok)
+      expect(json['notes']).to eq('')
+      expect(appointment.reload.notes).to eq('')
     end
 
     it 'returns the booked price even after the provider changes their price' do

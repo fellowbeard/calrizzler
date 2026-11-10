@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_172938) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_10_170028) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,6 +72,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_172938) do
     t.datetime "created_at", null: false
     t.integer "duration_minutes", null: false
     t.boolean "duration_overridden", default: false, null: false
+    t.text "notes"
     t.bigint "resource_id", null: false
     t.datetime "scheduled_at", null: false
     t.string "status", default: "scheduled", null: false
@@ -101,11 +102,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_172938) do
 
   create_table "clients", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.string "address_line1"
+    t.string "address_line2"
+    t.string "city"
     t.datetime "created_at", null: false
     t.string "email"
     t.string "first_name"
     t.string "last_name"
     t.string "phone"
+    t.string "postal_code"
+    t.string "state"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["account_id"], name: "index_clients_on_account_id"
