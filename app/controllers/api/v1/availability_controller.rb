@@ -8,12 +8,11 @@ class Api::V1::AvailabilityController < Api::V1::BaseController
 
     render json: availability_response(date, calculator)
   rescue ActionController::ParameterMissing, ArgumentError => e
-    render json: {
-      error: {
-        code: 'invalid_availability_parameters',
-        message: e.message,
-      },
-    }, status: :unprocessable_entity
+    render_error(
+      code: 'invalid_availability_parameters',
+      message: e.message,
+      status: :unprocessable_entity
+    )
   end
 
   private

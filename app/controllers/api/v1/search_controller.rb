@@ -54,13 +54,7 @@ class Api::V1::SearchController < Api::V1::BaseController
   end
 
   def render_search_error(message)
-    render json: {
-      error: {
-        code: 'bad_request',
-        message: message,
-        details: nil,
-      },
-    }, status: :bad_request
+    render_error(code: 'bad_request', message: message, status: :bad_request)
   end
 
   def search_results(query, date, status)
