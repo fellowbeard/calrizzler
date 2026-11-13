@@ -12,7 +12,6 @@ Rails.application.routes.draw do
       resources :clients, only: [:index, :show, :create, :update, :destroy]
 
       resource :account, only: [:show, :update]
-      resources :accounts, only: [:index, :show, :create, :update, :destroy]
 
       resources :working_hours, only: [:index, :create, :update, :destroy]
       resources :user_working_hours, only: [:update, :destroy]

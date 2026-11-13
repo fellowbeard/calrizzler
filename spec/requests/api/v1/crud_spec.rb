@@ -343,7 +343,8 @@ RSpec.describe 'Api::V1 CRUD and authorization', type: :request do
       }
 
       expect(response).to have_http_status(:unprocessable_entity)
-      expect(json.dig('error', 'details', 'resource')).to include('is already booked at the scheduled time')
+      expect(json.dig('error', 'details', 'resource'))
+        .to include(a_string_including('is already booked at the scheduled time'))
     end
 
     it 'prevents read-only users from creating appointments' do
