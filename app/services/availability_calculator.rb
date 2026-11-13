@@ -13,36 +13,33 @@ class AvailabilityCalculator
     raise ArgumentError, 'Resource must belong to account' unless resource.account_id == @account.id
   end
 
-  def available_slots
-    intervals = recurring_intervals
-
-    intervals = subtract_intervals(intervals, business_closures) if inherits_business_hours?
-
-    intervals += provider_exceptions(true)
-    intervals = merge_intervals(intervals)
-
-    intervals = subtract_intervals(intervals, provider_exceptions(false))
-    intervals = subtract_intervals(intervals, occupied_intervals)
-
-    intervals.flat_map { |start_time, end_time| slots_between(start_time, end_time) }
-             .uniq
-             .sort
+  # Every slot inside the provider's working hours, ignoring time off and bookings.
+  def candidate_slots
+    slots_within(working_intervals)
   end
 
-  def candidate_slots
-    intervals = recurring_intervals
+  # Candidate slots minus the provider's time off and existing bookings.
+  def available_slots
+    intervals = subtract_intervals(working_intervals, provider_exceptions(false))
+    intervals = subtract_intervals(intervals, occupied_intervals)
 
-    intervals = subtract_intervals(intervals, business_closures) if inherits_business_hours?
-
-    intervals += provider_exceptions(true)
-    intervals = merge_intervals(intervals)
-
-    intervals.flat_map { |start_time, end_time| slots_between(start_time, end_time) }
-             .uniq
-             .sort
+    slots_within(intervals)
   end
 
   private
+
+  def working_intervals
+    intervals = recurring_intervals
+    intervals = subtract_intervals(intervals, business_closures) if inherits_business_hours?
+
+    merge_intervals(intervals + provider_exceptions(true))
+  end
+
+  def slots_within(intervals)
+    intervals.flat_map { |start_time, end_time| slots_between(start_time, end_time) }
+             .uniq
+             .sort
+  end
 
   def day_start
     @day_start ||= @timezone.local(@date.year, @date.month, @date.day)

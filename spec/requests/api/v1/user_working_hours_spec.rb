@@ -120,4 +120,65 @@ RSpec.describe 'Api::V1::UserWorkingHours', type: :request do
       expect(UserWorkingHour.exists?(hour.id)).to be(true)
     end
   end
+
+  describe 'PUT /api/v1/users/:user_id/user_working_hours/replace' do
+    let(:new_week) do
+      {
+        user_working_hours: [
+          { day_of_week: 1, opens_at: '18:00', closes_at: '22:00', is_closed: false },
+          { day_of_week: 2, is_closed: true },
+        ],
+      }
+    end
+
+    it 'lets staff replace their own schedule' do
+      old_hour = create(:user_working_hour, user: staff)
+
+      put "/api/v1/users/#{staff.id}/user_working_hours/replace",
+          params: new_week, headers: auth_headers(staff), as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.map { |hour| [hour['day_of_week'], hour['is_closed']] })
+        .to eq([[1, false], [2, true]])
+      expect(UserWorkingHour.exists?(old_hour.id)).to be(false)
+    end
+
+    it 'keeps the old schedule when any row is invalid' do
+      old_hour = create(:user_working_hour, user: staff)
+      bad_week = {
+        user_working_hours: [
+          { day_of_week: 3, is_closed: true },
+          { day_of_week: 3, opens_at: '09:00', closes_at: '12:00', is_closed: false },
+        ],
+      }
+
+      put "/api/v1/users/#{staff.id}/user_working_hours/replace",
+          params: bad_week, headers: auth_headers(staff), as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(staff.user_working_hours.reload.pluck(:id)).to eq([old_hour.id])
+    end
+
+    it "forbids staff from replacing another provider's schedule" do
+      put "/api/v1/users/#{other_staff.id}/user_working_hours/replace",
+          params: new_week, headers: auth_headers(staff), as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it 'lets owners replace any provider schedule' do
+      put "/api/v1/users/#{staff.id}/user_working_hours/replace",
+          params: new_week, headers: auth_headers(owner), as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(staff.user_working_hours.count).to eq(2)
+    end
+
+    it 'forbids read-only users' do
+      put "/api/v1/users/#{read_only.id}/user_working_hours/replace",
+          params: new_week, headers: auth_headers(read_only), as: :json
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
 end

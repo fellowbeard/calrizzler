@@ -154,4 +154,59 @@ RSpec.describe 'Api::V1::WorkingHours', type: :request do
       expect(response).to have_http_status(:forbidden)
     end
   end
+
+  describe 'PUT /api/v1/working_hours/replace' do
+    let!(:existing) { account.working_hours.create!(day_of_week: 1, opens_at: '09:00', closes_at: '17:00') }
+
+    let(:new_week) do
+      {
+        working_hours: [
+          { day_of_week: 1, opens_at: '08:00', closes_at: '12:00' },
+          { day_of_week: 1, opens_at: '13:00', closes_at: '18:00' },
+          { day_of_week: 2, opens_at: '10:00', closes_at: '16:00' },
+        ],
+      }
+    end
+
+    it 'replaces the whole schedule for owners' do
+      put '/api/v1/working_hours/replace', params: new_week, headers: auth_headers(owner), as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.map { |hour| [hour['day_of_week'], hour['opens_at'][11, 5]] })
+        .to eq([[1, '08:00'], [1, '13:00'], [2, '10:00']])
+      expect(WorkingHour.exists?(existing.id)).to be(false)
+    end
+
+    it 'clears the schedule when given an empty list' do
+      put '/api/v1/working_hours/replace', params: { working_hours: [] }, headers: auth_headers(owner), as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(account.working_hours.count).to eq(0)
+    end
+
+    it 'keeps the old schedule when any range is invalid' do
+      overlapping = { day_of_week: 1, opens_at: '11:00', closes_at: '14:00' }
+      bad_week = { working_hours: [new_week[:working_hours].first, overlapping] }
+
+      put '/api/v1/working_hours/replace', params: bad_week, headers: auth_headers(owner), as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body.dig('error', 'code')).to eq('validation_failed')
+      expect(account.working_hours.reload.pluck(:id)).to eq([existing.id])
+    end
+
+    it 'rejects a request without the working_hours key' do
+      put '/api/v1/working_hours/replace', params: {}, headers: auth_headers(owner), as: :json
+
+      expect(response).to have_http_status(:bad_request)
+      expect(account.working_hours.count).to eq(1)
+    end
+
+    it 'forbids staff' do
+      put '/api/v1/working_hours/replace', params: new_week, headers: auth_headers(staff), as: :json
+
+      expect(response).to have_http_status(:forbidden)
+      expect(account.working_hours.pluck(:id)).to eq([existing.id])
+    end
+  end
 end
