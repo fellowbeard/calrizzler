@@ -48,7 +48,17 @@ class Api::V1::UsersController < Api::V1::BaseController
   def destroy
     return render_cannot_deactivate_self if @user == current_user
 
-    @user.update!(active: false)
+    User.transaction do
+      @user.update!(active: false)
+
+      @user.appointments
+           .where(status: 'scheduled')
+           .where('scheduled_at >= ?', Time.current)
+           .find_each do |appointment|
+        appointment.update!(status: 'canceled')
+      end
+    end
+
     head :no_content
   end
 

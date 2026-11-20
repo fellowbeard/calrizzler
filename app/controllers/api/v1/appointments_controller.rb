@@ -48,6 +48,7 @@ class Api::V1::AppointmentsController < Api::V1::BaseController
   def calendar
     appointments = current_account
                    .appointments
+                   .where.not(status: 'canceled')
                    .includes(:client, :resource, :services, :user)
                    .order(:scheduled_at)
 
