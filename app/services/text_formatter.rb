@@ -6,7 +6,9 @@ class TextFormatter
   # For people's names: title case only, no number-word conversion
   # (a client named "Ten" should stay "Ten", not become "10").
   def self.person_name(value)
-    value.to_s.strip.titleize.presence
+    value.to_s.strip.split.map do |word|
+      word.sub(/\A./, &:upcase)
+    end.join(' ').presence
   end
 
   def self.capitalize_first(value)
