@@ -29,7 +29,9 @@ class Api::V1::DashboardsController < Api::V1::BaseController
   end
 
   def calendar_appointments_scope
-    current_account.appointments.includes(:resource)
+    current_account.appointments
+                   .where.not(status: 'canceled')
+                   .includes(:resource)
   end
 
   def services_scope
