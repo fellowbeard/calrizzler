@@ -60,15 +60,11 @@ class Api::V1::BaseController < ActionController::API
   end
 
   def render_not_found(exception)
-    Rails.logger.error(
-      "RECORD NOT FOUND: #{exception.class} - #{exception.message}"
-    )
-
-    Rails.logger.error(exception.backtrace.first(10).join("\n"))
+    Rails.logger.info("Not found: #{exception.message}")
 
     render_error(
       code: 'not_found',
-      message: exception.message,
+      message: "#{exception.model&.titleize || 'Record'} not found.",
       status: :not_found
     )
   end

@@ -21,8 +21,8 @@ class Client < ApplicationRecord
   private
 
   def format_client
-    self.first_name = TextFormatter.titleize(first_name)
-    self.last_name = TextFormatter.titleize(last_name)
+    self.first_name = TextFormatter.person_name(first_name)
+    self.last_name = TextFormatter.person_name(last_name)
     self.phone = TextFormatter.phone_number(phone)
     self.email = TextFormatter.email(email)
   end

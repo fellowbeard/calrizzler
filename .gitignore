@@ -28,12 +28,6 @@
 # Ignore master key for decrypting credentials and more.
 /config/master.key
 
-calrizzler-frontend/node_modules/
-calrizzler-frontend/dist/
-calrizzler-frontend/.vite/
-# Ignore Vite dependencies and cache
-calrizzler-frontend/.vite/deps/
-
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 

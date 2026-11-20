@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Api::V1::Search', type: :request do
+  include ActiveSupport::Testing::TimeHelpers
   let(:account) { create(:account) }
   let(:owner) { create(:user, account: account) }
   let(:staff) { create(:user, :staff, account: account) }
@@ -229,25 +230,27 @@ RSpec.describe 'Api::V1::Search', type: :request do
     end
 
     it 'respects the account timezone when filtering by date' do
-      account.update!(timezone: 'America/Los_Angeles')
+      travel_to Time.utc(2026, 11, 10, 12, 0) do
+        account.update!(timezone: 'America/Los_Angeles')
 
-      appointment.update!(
-        scheduled_at: Time.utc(2026, 11, 16, 7, 30)
-      )
+        appointment.update!(
+          scheduled_at: Time.utc(2026, 11, 16, 7, 30)
+        )
 
-      get '/api/v1/search',
-          headers: auth_headers(owner),
-          params: { date: '2026-11-15' }
+        get '/api/v1/search',
+            headers: auth_headers(owner),
+            params: { date: '2026-11-15' }
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body['appointments'].pluck('id')).to include(appointment.id)
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body['appointments'].pluck('id')).to include(appointment.id)
 
-      get '/api/v1/search',
-          headers: auth_headers(owner),
-          params: { date: '2026-11-16' }
+        get '/api/v1/search',
+            headers: auth_headers(owner),
+            params: { date: '2026-11-16' }
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body['appointments'].pluck('id')).not_to include(appointment.id)
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body['appointments'].pluck('id')).not_to include(appointment.id)
+      end
     end
 
     it 'does not expose another users appointments through filters' do

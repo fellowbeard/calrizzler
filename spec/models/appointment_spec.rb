@@ -103,24 +103,6 @@ RSpec.describe Appointment, type: :model do
     )
   end
 
-  it 'computes reservation time from service duration' do
-    appointment = account.appointments.new(scheduled_at: 1.hour.from_now, status: 'scheduled', user: user,
-                                           client: client, resource: resource, duration_minutes: 45)
-    appointment.services << service
-    appointment.save!
-
-    expect(appointment.blocking_reservation_time).to eq(45)
-  end
-
-  it 'sums the duration of all services' do
-    appointment = account.appointments.new(scheduled_at: 1.hour.from_now, status: 'scheduled', user: user,
-                                           client: client, resource: resource, duration_minutes: 135)
-    appointment.services << [service, long_service]
-    appointment.save!
-
-    expect(appointment.service_duration_minutes).to eq(135)
-  end
-
   it 'prevents overlapping appointments for the same provider' do
     another_resource = account.resources.create!(name: 'Room B')
     start_time = 1.day.from_now

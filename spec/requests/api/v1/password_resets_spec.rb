@@ -149,6 +149,10 @@ RSpec.describe 'Password Resets API', type: :request do
            }
 
       expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body['error']).to include(
+        'code' => 'invalid_token',
+        'message' => 'Invalid or expired password reset token.'
+      )
 
       expect(user.reload.authenticate('old-password')).to eq(user)
     end
@@ -164,6 +168,8 @@ RSpec.describe 'Password Resets API', type: :request do
            }
 
       expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.parsed_body.dig('error', 'code')).to eq('validation_failed')
+      expect(response.parsed_body.dig('error', 'details', 'password_confirmation')).to be_present
 
       expect(user.reload.authenticate('old-password')).to eq(user)
       expect(reset.reload.used_at).to be_nil

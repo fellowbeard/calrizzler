@@ -3,6 +3,12 @@ class TextFormatter
     NameNormalizer.normalize(value).titleize if value.present?
   end
 
+  # For people's names: title case only, no number-word conversion
+  # (a client named "Ten" should stay "Ten", not become "10").
+  def self.person_name(value)
+    value.to_s.strip.titleize.presence
+  end
+
   def self.capitalize_first(value)
     normalized = NameNormalizer.normalize(value)
     return if normalized.blank?

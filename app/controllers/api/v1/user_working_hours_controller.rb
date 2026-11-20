@@ -1,6 +1,6 @@
 class Api::V1::UserWorkingHoursController < Api::V1::BaseController
   before_action :require_write_access, except: [:index]
-  before_action :set_user, only: [:index, :create]
+  before_action :set_user, only: [:index, :create, :replace]
   before_action :set_user_working_hour, only: [:update, :destroy]
 
   def index
@@ -38,7 +38,30 @@ class Api::V1::UserWorkingHoursController < Api::V1::BaseController
     head :no_content
   end
 
+  # PUT /api/v1/users/:user_id/user_working_hours/replace
+  # Swaps the provider's whole weekly schedule in one transaction.
+  # Days with no rows inherit business hours.
+  def replace
+    return unless require_schedule_access(@user)
+
+    UserWorkingHour.transaction do
+      @user.user_working_hours.destroy_all
+      replacement_params.each { |attributes| @user.user_working_hours.create!(attributes) }
+    end
+
+    render json: @user.user_working_hours.order(:day_of_week, :opens_at)
+  rescue ActiveRecord::RecordInvalid => e
+    render_validation_errors(e.record)
+  end
+
   private
+
+  def replacement_params
+    raise ActionController::ParameterMissing, :user_working_hours unless params.key?(:user_working_hours)
+
+    params.permit(user_working_hours: [:day_of_week, :opens_at, :closes_at, :is_closed])
+          .fetch(:user_working_hours, [])
+  end
 
   def set_user
     @user = current_account.users.find(params[:user_id] || current_user.id)

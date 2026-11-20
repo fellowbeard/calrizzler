@@ -31,14 +31,6 @@ class Appointment < ApplicationRecord
     scheduled_at.strftime('%A, %B %d, %Y')
   end
 
-  def service_duration_minutes
-    services.sum(:duration_minutes)
-  end
-
-  def blocking_reservation_time
-    duration_minutes
-  end
-
   def ends_at
     scheduled_at + duration_minutes.minutes
   end
@@ -53,10 +45,6 @@ class Appointment < ApplicationRecord
 
   def canceled?
     status == 'canceled'
-  end
-
-  def uses_default_duration?
-    false
   end
 
   private

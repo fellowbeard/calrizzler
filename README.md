@@ -184,6 +184,16 @@ Run the test suite with:
 bundle exec rspec
 ```
 
+## Linting
+
+The API uses RuboCop with the `rubocop-rails`, `rubocop-performance` and `rubocop-rspec` plugins. Configuration lives in `.rubocop.yml`.
+
+```bash
+bundle exec rubocop      # check
+bundle exec rubocop -a   # apply safe autocorrections
+bundle exec rubocop -A   # also apply unsafe autocorrections; review the diff
+```
+
 ## Development
 
 Install dependencies:

@@ -24,9 +24,7 @@ class Api::V1::PasswordResetsController < Api::V1::BaseController
       message: 'Password has been reset successfully.',
     }, status: :ok
   rescue ActiveRecord::RecordInvalid => e
-    render json: {
-      errors: e.record.errors.full_messages,
-    }, status: :unprocessable_entity
+    render_validation_errors(e.record)
   end
 
   private
@@ -60,9 +58,11 @@ class Api::V1::PasswordResetsController < Api::V1::BaseController
   end
 
   def render_invalid_token
-    render json: {
-      error: 'Invalid or expired password reset token.',
-    }, status: :unprocessable_entity
+    render_error(
+      code: 'invalid_token',
+      message: 'Invalid or expired password reset token.',
+      status: :unprocessable_entity
+    )
   end
 
   def reset_password!(reset)

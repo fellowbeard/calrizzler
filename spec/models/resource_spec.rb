@@ -16,6 +16,12 @@ RSpec.describe Resource, type: :model do
     expect(resource.name).to eq('Room 21')
   end
 
+  it 'normalizes capitalized number words too' do
+    resource = create(:resource, account: account, name: 'Room Twenty One')
+
+    expect(resource.name).to eq('Room 21')
+  end
+
   it 'requires names to be unique within an account' do
     create(:resource, account: account, name: 'Room A')
     duplicate = build(:resource, account: account, name: 'Room A')

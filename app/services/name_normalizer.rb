@@ -60,8 +60,8 @@ class NameNormalizer
   def normalized_current_value
     return '100' if one_hundred?
     return compound_tens_value if compound_tens?
-    return TENS[current_word].to_s if TENS.key?(current_word)
-    return ONES[current_word].to_s if ONES.key?(current_word)
+    return TENS[current_key].to_s if TENS.key?(current_key)
+    return ONES[current_key].to_s if ONES.key?(current_key)
 
     current_word
   end
@@ -75,30 +75,27 @@ class NameNormalizer
   end
 
   def one_hundred?
-    current_word == 'one' && next_word == 'hundred'
+    current_key == 'one' && next_key == 'hundred'
   end
 
   def compound_tens?
-    TENS.key?(current_word) && ONES.key?(next_word) && ONES[next_word].between?(1, 9)
+    TENS.key?(current_key) && ONES.key?(next_key) && ONES[next_key].between?(1, 9)
   end
 
   def compound_tens_value
-    (TENS[current_word] + ONES[next_word]).to_s
+    (TENS[current_key] + ONES[next_key]).to_s
   end
 
   def current_word
     @words[@index]
   end
 
-  def current_word_key
+  # Number words are matched case-insensitively ("Twenty" and "twenty" both become 20).
+  def current_key
     current_word&.downcase
   end
 
-  def next_word
-    @words[@index + 1]
-  end
-
-  def next_word_key
-    next_word&.downcase
+  def next_key
+    @words[@index + 1]&.downcase
   end
 end
